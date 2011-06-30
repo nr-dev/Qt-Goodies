@@ -1,43 +1,44 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2010 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
+** Commercial Usage
+** Licensees holding valid Qt Commercial licenses may use this file in
+** accordance with the Qt Commercial License Agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and Nokia.
+**
 ** GNU Lesser General Public License Usage
-** This file may be used under the terms of the GNU Lesser General Public
-** License version 2.1 as published by the Free Software Foundation and
-** appearing in the file LICENSE.LGPL included in the packaging of this
-** file. Please review the following information to ensure the GNU Lesser
-** General Public License version 2.1 requirements will be met:
-** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
 ** In addition, as a special exception, Nokia gives you certain additional
-** rights. These rights are described in the Nokia Qt LGPL Exception
+** rights.  These rights are described in the Nokia Qt LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
 **
 ** GNU General Public License Usage
-** Alternatively, this file may be used under the terms of the GNU General
-** Public License version 3.0 as published by the Free Software Foundation
-** and appearing in the file LICENSE.GPL included in the packaging of this
-** file. Please review the following information to ensure the GNU General
-** Public License version 3.0 requirements will be met:
-** http://www.gnu.org/copyleft/gpl.html.
+** Alternatively, this file may be used under the terms of the GNU
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
-** Other Usage
-** Alternatively, this file may be used in accordance with the terms and
-** conditions contained in a signed written agreement between you and Nokia.
-**
-**
-**
-**
-**
+** If you have questions regarding the use of this file, please contact
+** Nokia at qt-info@nokia.com.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
+
 
 #include "qDoubleSlider.h"
 #ifndef QT_NO_SLIDER
@@ -49,23 +50,39 @@
 #include <QtGui/QPainter>
 #include <QtGui/QStyle>
 #include <QtGui/QStyleOption>
-//#include "private/qabstractslider_p.h"
-#include "qabstractslider_p.h"
-//#include "qtbase/src/gui/widgets/qabstractslider_p.h"
-#include "QtCore/QDebug"
+#include <QtCore/QDebug>
+#include "private/qabstractslider_p.h"
 
 QT_BEGIN_NAMESPACE
 
-class QSliderPrivate : public QAbstractSliderPrivate
+QAbstractSliderPrivate::QAbstractSliderPrivate()
+    : minimum(0), maximum(99), pageStep(10), value(0), position(0), pressValue(-1),
+      singleStep(1), offset_accumulated(0), tracking(true),
+      blocktracking(false), pressed(false),
+      invertedAppearance(false), invertedControls(false),
+      orientation(Qt::Horizontal), repeatAction(QAbstractSlider::SliderNoAction)
+#ifdef QT_KEYPAD_NAVIGATION
+      , isAutoRepeating(false)
+      , repeatMultiplier(1)
+#endif
 {
-    Q_DECLARE_PUBLIC(QSlider)
+}
+
+QAbstractSliderPrivate::~QAbstractSliderPrivate()
+{
+}
+
+
+class QDoubleSliderPrivate : public QAbstractSliderPrivate
+{
+    Q_DECLARE_PUBLIC(QDoubleSlider)
 public:
     QStyle::SubControl pressedControl;
     int tickInterval;
     QSlider::TickPosition tickPosition;
     int clickOffset;
     void init();
-	void resetLayoutItemMargins();
+    void resetLayoutItemMargins();
     int pixelPosToRangeValue(int pos) const;
     inline int pick(const QPoint &pt) const;
 
@@ -75,9 +92,9 @@ public:
     QRect hoverRect;
 };
 
-void QSliderPrivate::init()
+void QDoubleSliderPrivate::init()
 {
-    Q_Q(QSlider);
+    Q_Q(QDoubleSlider);
     pressedControl = QStyle::SC_None;
     tickInterval = 0;
     tickPosition = QSlider::NoTicks;
@@ -91,17 +108,17 @@ void QSliderPrivate::init()
 	resetLayoutItemMargins();
 }
 
-void QSliderPrivate::resetLayoutItemMargins()
+void QDoubleSliderPrivate::resetLayoutItemMargins()
 {
-    Q_Q(QSlider);
+    Q_Q(QDoubleSlider);
     QStyleOptionSlider opt;
     q->initStyleOption(&opt);
     setLayoutItemMargins(QStyle::SE_SliderLayoutItem, &opt);
 }
 
-int QSliderPrivate::pixelPosToRangeValue(int pos) const
+int QDoubleSliderPrivate::pixelPosToRangeValue(int pos) const
 {
-    Q_Q(const QSlider);
+    Q_Q(const QDoubleSlider);
     QStyleOptionSlider opt;
     q->initStyleOption(&opt);
     QRect gr = q->style()->subControlRect(QStyle::CC_Slider, &opt, QStyle::SC_SliderGroove, q);
@@ -121,24 +138,24 @@ int QSliderPrivate::pixelPosToRangeValue(int pos) const
                                            sliderMax - sliderMin, opt.upsideDown);
 }
 
-inline int QSliderPrivate::pick(const QPoint &pt) const
+inline int QDoubleSliderPrivate::pick(const QPoint &pt) const
 {
     return orientation == Qt::Horizontal ? pt.x() : pt.y();
 }
 
 /*!
-    Initialize \a option with the values from this QSlider. This method
+    Initialize \a option with the values from this QDoubleSlider. This method
     is useful for subclasses when they need a QStyleOptionSlider, but don't want
     to fill in all the information themselves.
 
     \sa QStyleOption::initFrom()
 */
-void QSlider::initStyleOption(QStyleOptionSlider *option) const
+void QDoubleSlider::initStyleOption(QStyleOptionSlider *option) const
 {
     if (!option)
         return;
 
-    Q_D(const QSlider);
+    Q_D(const QDoubleSlider);
     option->initFrom(this);
     option->subControls = QStyle::SC_None;
     option->activeSubControls = QStyle::SC_None;
@@ -159,9 +176,9 @@ void QSlider::initStyleOption(QStyleOptionSlider *option) const
         option->state |= QStyle::State_Horizontal;
 }
 
-bool QSliderPrivate::updateHoverControl(const QPoint &pos)
+bool QDoubleSliderPrivate::updateHoverControl(const QPoint &pos)
 {
-    Q_Q(QSlider);
+    Q_Q(QDoubleSlider);
     QRect lastHoverRect = hoverRect;
     QStyle::SubControl lastHoverControl = hoverControl;
     bool doesHover = q->testAttribute(Qt::WA_Hover);
@@ -173,9 +190,9 @@ bool QSliderPrivate::updateHoverControl(const QPoint &pos)
     return !doesHover;
 }
 
-QStyle::SubControl QSliderPrivate::newHoverControl(const QPoint &pos)
+QStyle::SubControl QDoubleSliderPrivate::newHoverControl(const QPoint &pos)
 {
-    Q_Q(QSlider);
+    Q_Q(QDoubleSlider);
     QStyleOptionSlider opt;
     q->initStyleOption(&opt);
     opt.subControls = QStyle::SC_All;
@@ -201,8 +218,8 @@ QStyle::SubControl QSliderPrivate::newHoverControl(const QPoint &pos)
 }
 
 /*!
-    \class QSlider
-    \brief The QSlider widget provides a vertical or horizontal slider.
+    \class QDoubleSlider
+    \brief The QDoubleSlider widget provides a vertical or horizontal slider.
 
     \ingroup basicwidgets
 
@@ -212,20 +229,20 @@ QStyle::SubControl QSliderPrivate::newHoverControl(const QPoint &pos)
     groove and translates the handle's position into an integer value
     within the legal range.
 
-    QSlider has very few of its own functions; most of the functionality is in
+    QDoubleSlider has very few of its own functions; most of the functionality is in
     QAbstractSlider. The most useful functions are setValue() to set
     the slider directly to some value; triggerAction() to simulate
     the effects of clicking (useful for shortcut keys);
     setSingleStep(), setPageStep() to set the steps; and setMinimum()
     and setMaximum() to define the range of the scroll bar.
 
-    QSlider provides methods for controlling tickmarks.  You can use
+    QDoubleSlider provides methods for controlling tickmarks.  You can use
     setTickPosition() to indicate where you want the tickmarks to be,
     setTickInterval() to indicate how many of them you want. the
     currently set tick position and interval can be queried using the
     tickPosition() and tickInterval() functions, respectively.
 
-    QSlider inherits a comprehensive set of signals:
+    QDoubleSlider inherits a comprehensive set of signals:
     \table
     \header \o Signal \o Description
     \row \o \l valueChanged()
@@ -240,8 +257,8 @@ QStyle::SubControl QSliderPrivate::newHoverControl(const QPoint &pos)
     \o Emitted when the user releases the slider.
     \endtable
 
-    QSlider only provides integer ranges. Note that although
-    QSlider handles very large numbers, it becomes difficult for users
+    QDoubleSlider only provides integer ranges. Note that although
+    QDoubleSlider handles very large numbers, it becomes difficult for users
     to use a slider accurately for very large ranges.
 
     A slider accepts focus on Tab and provides both a mouse wheel and a
@@ -270,7 +287,7 @@ QStyle::SubControl QSliderPrivate::newHoverControl(const QPoint &pos)
 
 
 /*!
-    \enum QSlider::TickPosition
+    \enum QDoubleSlider::TickPosition
 
     This enum specifies where the tick marks are to be drawn relative
     to the slider's groove and the handle the user moves.
@@ -294,11 +311,13 @@ QStyle::SubControl QSliderPrivate::newHoverControl(const QPoint &pos)
 /*!
     Constructs a vertical slider with the given \a parent.
 */
-QSlider::QSlider(QWidget *parent)
-    : QAbstractSlider(*new QSliderPrivate, parent)
+QDoubleSlider::QDoubleSlider(QWidget *parent)
+    : QAbstractSlider(*new QDoubleSliderPrivate, parent)
 {
     d_func()->orientation = Qt::Vertical;
     d_func()->init();
+    range=QPair<int,int>(40,60);
+    tracking=NONE;
 }
 
 /*!
@@ -307,26 +326,28 @@ QSlider::QSlider(QWidget *parent)
     the valid values are Qt::Vertical and Qt::Horizontal.
 */
 
-QSlider::QSlider(Qt::Orientation orientation, QWidget *parent)
-    : QAbstractSlider(*new QSliderPrivate, parent)
+QDoubleSlider::QDoubleSlider(Qt::Orientation orientation, QWidget *parent)
+    : QAbstractSlider(*new QDoubleSliderPrivate, parent)
 {
     d_func()->orientation = orientation;
     d_func()->init();
+    range=QPair<int,int>(40,60);
+    tracking=NONE;
 }
 
 #ifdef QT3_SUPPORT
 /*!
-    Use QSlider() and QObject::setObjectName() instead.
+    Use QDoubleSlider() and QObject::setObjectName() instead.
 
     \oldcode
-        QSlider *mySlider = new QSlider(parent, name);
+        QDoubleSlider *mySlider = new QDoubleSlider(parent, name);
     \newcode
-        QSlider *mySlider = new QSlider(parent);
+        QDoubleSlider *mySlider = new QDoubleSlider(parent);
         mySlider->setObjectName(name);
     \endcode
 */
-QSlider::QSlider(QWidget *parent, const char *name)
-    : QAbstractSlider(*new QSliderPrivate, parent)
+QDoubleSlider::QDoubleSlider(QWidget *parent, const char *name)
+    : QAbstractSlider(*new QDoubleSliderPrivate, parent)
 {
     setObjectName(QString::fromAscii(name));
     d_func()->orientation = Qt::Vertical;
@@ -334,17 +355,17 @@ QSlider::QSlider(QWidget *parent, const char *name)
 }
 
 /*!
-    Use QSlider() and QObject::setObjectName() instead.
+    Use QDoubleSlider() and QObject::setObjectName() instead.
 
     \oldcode
-        QSlider *mySlider = new QSlider(orientation, parent, name);
+        QDoubleSlider *mySlider = new QDoubleSlider(orientation, parent, name);
     \newcode
-        QSlider *mySlider = new QSlider(orientation, parent);
+        QDoubleSlider *mySlider = new QDoubleSlider(orientation, parent);
         mySlider->setObjectName(name);
     \endcode
 */
-QSlider::QSlider(Qt::Orientation orientation, QWidget *parent, const char *name)
-    : QAbstractSlider(*new QSliderPrivate, parent)
+QDoubleSlider::QDoubleSlider(Qt::Orientation orientation, QWidget *parent, const char *name)
+    : QAbstractSlider(*new QDoubleSliderPrivate, parent)
 {
     setObjectName(QString::fromAscii(name));
     d_func()->orientation = orientation;
@@ -352,14 +373,14 @@ QSlider::QSlider(Qt::Orientation orientation, QWidget *parent, const char *name)
 }
 
 /*!
-    Use QSlider(), QObject::setObjectName() and the functionality
+    Use QDoubleSlider(), QObject::setObjectName() and the functionality
     inherited from QAbstractSlider instead.
 
     \oldcode
-        QSlider *mySlider = new QSlider(minValue, maxValue, pageStep,
+        QDoubleSlider *mySlider = new QDoubleSlider(minValue, maxValue, pageStep,
                                         value, orientation, parent, name);
     \newcode
-        QSlider *mySlider = new QSlider(orientation, parent);
+        QDoubleSlider *mySlider = new QDoubleSlider(orientation, parent);
         mySlider->setObjectName(name);
         mySlider->setMinimum(minValue);
         mySlider->setMaximum(maxValue);
@@ -367,11 +388,11 @@ QSlider::QSlider(Qt::Orientation orientation, QWidget *parent, const char *name)
         mySlider->setValue(value);
     \endcode
 */
-QSlider::QSlider(int minValue, int maxValue, int pageStep, int value, Qt::Orientation orientation,
+QDoubleSlider::QDoubleSlider(int minValue, int maxValue, int pageStep, int value, Qt::Orientation orientation,
                  QWidget *parent, const char *name)
-    : QAbstractSlider(*new QSliderPrivate, parent)
+    : QAbstractSlider(*new QDoubleSliderPrivate, parent)
 {
-    Q_D(QSlider);
+    Q_D(QDoubleSlider);
     setObjectName(QString::fromAscii(name));
     d->minimum = minValue;
     d->maximum = maxValue;
@@ -385,18 +406,197 @@ QSlider::QSlider(int minValue, int maxValue, int pageStep, int value, Qt::Orient
 /*!
     Destroys this slider.
 */
-QSlider::~QSlider()
+QDoubleSlider::~QDoubleSlider()
 {
 }
+#include <iostream>
+
+class SliderProperties {
+  static const float factor = 0.5;
+  
+public:
+  enum WHICH { NONE=0, FIRST=0x1, SECOND=0x2, BOTH=FIRST|SECOND };
+
+  static QPolygon getMarkerArea(const QRect & bbox, const QPair<int,int> & range, SliderProperties::WHICH which);
+
+  static int getGrooveX(const QRect & bbox) {
+    return bbox.x()+factor*.5*bbox.width();
+  }
+  static int getGrooveY(const QRect & bbox) {
+    return bbox.y()+factor*.5*bbox.height();
+  }
+  static int getGrooveWidth(const QRect & bbox) {
+    return (1.0-factor)*bbox.width();
+  }
+  static int getGrooveHeight(const QRect & bbox) {
+    return (1.0-factor)*bbox.height();
+  }
+  static int getPosMin(const QRect & bbox, int min) {
+    return SliderProperties::getGrooveX(bbox)+0.01*min*SliderProperties::getGrooveWidth(bbox);
+  }
+  static int getPosMax(const QRect & bbox, int max) {
+    return SliderProperties::getGrooveX(bbox)+0.01*max*SliderProperties::getGrooveWidth(bbox);
+  }
+
+  static void ppoint(const QPoint & p) {
+    std::cout<<"("<<p.x()<<","<<p.y()<<")";
+  }
+
+
+  static QDoubleSlider::ELEMENT getElement(const QRect & bbox, const QPair<int, int> & range, const QPoint & pos) {
+    QPolygon p = getMarkerArea(bbox, range, SliderProperties::FIRST);
+    for (int i=0;i<p.size();++i) {
+      ppoint(p[i]);
+    }
+    std::cout<<std::endl;
+    ppoint(pos);
+    std::cout<<std::endl;
+    if (p.containsPoint(pos,Qt::OddEvenFill))
+      return QDoubleSlider::FIRST;
+    p = getMarkerArea(bbox, range, SliderProperties::SECOND);
+    if (p.containsPoint(pos,Qt::OddEvenFill))
+      return QDoubleSlider::SECOND;
+   
+    return QDoubleSlider::NONE;
+  }
+};
+
+QPolygon SliderProperties::getMarkerArea(const QRect & bbox, const QPair<int,int> & range, SliderProperties::WHICH which)
+{
+  QRect paintBox;
+  
+  paintBox.setY(SliderProperties::getGrooveY(bbox));
+  paintBox.setHeight(SliderProperties::getGrooveHeight(bbox)+0.1*bbox.height());
+
+  int width=5;
+
+  if (which&SliderProperties::FIRST) {
+    int pos = SliderProperties::getPosMin(bbox,range.first);
+    
+    paintBox.setX(pos-width/2);
+    paintBox.setWidth(width);
+
+  }
+  else if (which&SliderProperties::SECOND) {
+    int pos = SliderProperties::getPosMin(bbox,range.second);
+    
+    paintBox.setX(pos-width/2);
+    paintBox.setWidth(width);
+
+  }
+  return QPolygon(paintBox,true);
+}
+
+
+void paintGroove(QPainter & p, const QRect & bbox) {
+
+  QRect paintBox;
+
+  static const float factor = 0.5;
+
+  paintBox.setX(SliderProperties::getGrooveX(bbox));
+  paintBox.setY(SliderProperties::getGrooveY(bbox));
+  paintBox.setWidth(SliderProperties::getGrooveWidth(bbox));
+  paintBox.setHeight(SliderProperties::getGrooveHeight(bbox));
+ 
+
+  std::cout<<"========================="<<std::endl;
+  std::cout<<bbox.x()<<"->"<<paintBox.x()<<std::endl;
+  std::cout<<bbox.y()<<"->"<<paintBox.y()<<std::endl;
+  std::cout<<bbox.width()<<"->"<<paintBox.width()<<std::endl;
+  std::cout<<bbox.height()<<"->"<<paintBox.height()<<std::endl;
+
+  p.fillRect(bbox,Qt::red);
+  p.fillRect(paintBox,Qt::yellow);
+}
+
+void paintFilling(QPainter & p, const QRect & bbox, int min, int max) {
+
+  QRect paintBox;
+
+  int x = SliderProperties::getPosMin(bbox,min);
+  int width = SliderProperties::getPosMax(bbox,max)-x;
+
+  paintBox.setX(x);
+  paintBox.setY(SliderProperties::getGrooveY(bbox));
+  paintBox.setWidth(width);
+  paintBox.setHeight(SliderProperties::getGrooveHeight(bbox));
+  
+  p.fillRect(paintBox,Qt::black);
+}
+
+void paintFilling(QPainter & p, const QRect & bbox, const QPair<int,int> & range) {
+
+  QRect paintBox;
+
+  int x = SliderProperties::getPosMin(bbox,range.first);
+  int width = SliderProperties::getPosMax(bbox,range.second)-x;
+
+  paintBox.setX(x);
+  paintBox.setY(SliderProperties::getGrooveY(bbox));
+  paintBox.setWidth(width);
+  paintBox.setHeight(SliderProperties::getGrooveHeight(bbox));
+  
+  p.fillRect(paintBox,Qt::black);
+}
+
+void paintMarker(QPainter & p, const QRect & bbox, const QPair<int,int> & range, SliderProperties::WHICH which) {
+
+  QRect paintBox;
+
+  p.setBrush(Qt::blue);
+
+  if (which&SliderProperties::FIRST) {
+    QPolygon poly = SliderProperties::getMarkerArea(bbox, range, which);
+    p.drawPolygon(poly);
+  }
+  if (which&SliderProperties::SECOND) {
+    QPolygon poly = SliderProperties::getMarkerArea(bbox, range, which);
+    p.drawPolygon(poly);
+  }
+}
+
+void paintTicks(QPainter & p, const QRect & bbox) {
+  int top = SliderProperties::getGrooveY(bbox)+SliderProperties::getGrooveHeight(bbox);
+  int bottom = bbox.height();
+  int height = bottom-top;
+
+  bottom-=0.2*height;
+  top+=0.2*top;
+  
+  int baseX = SliderProperties::getGrooveX(bbox);
+  int width = SliderProperties::getGrooveWidth(bbox);
+
+  for (int i=0;i<100; i+=5) {
+    int x=baseX+i*width/100;
+    p.drawLine(QPoint(x,top),QPoint(x,bottom));
+  }
+
+}
+
+
 
 /*!
     \reimp
 */
-void QSlider::paintEvent(QPaintEvent *)
+void QDoubleSlider::paintEvent(QPaintEvent *)
 {
-    Q_D(QSlider);
+    Q_D(QDoubleSlider);
     QPainter p(this);
     QStyleOptionSlider opt;
+
+    QRect bbox = geometry();
+
+
+    paintGroove(p, bbox);
+    paintFilling(p, bbox, range);
+    paintTicks(p,bbox);
+    paintMarker(p, bbox, range, SliderProperties::FIRST);
+    paintMarker(p, bbox, range, SliderProperties::SECOND);
+
+
+
+    /*
     initStyleOption(&opt);
 
     opt.subControls = QStyle::SC_SliderGroove | QStyle::SC_SliderHandle;
@@ -410,15 +610,16 @@ void QSlider::paintEvent(QPaintEvent *)
     }
 
     style()->drawComplexControl(QStyle::CC_Slider, &opt, &p, this);
+    */
 }
 
 /*!
     \reimp
 */
 
-bool QSlider::event(QEvent *event)
+bool QDoubleSlider::event(QEvent *event)
 {
-    Q_D(QSlider);
+    Q_D(QDoubleSlider);
 
     switch(event->type()) {
     case QEvent::HoverEnter:
@@ -440,111 +641,103 @@ bool QSlider::event(QEvent *event)
 /*!
     \reimp
 */
-void QSlider::mousePressEvent(QMouseEvent *ev)
+void QDoubleSlider::mousePressEvent(QMouseEvent *ev)
 {
-    Q_D(QSlider);
+    Q_D(QDoubleSlider);
+    /*
     if (d->maximum == d->minimum || (ev->buttons() ^ ev->button())) {
         ev->ignore();
         return;
     }
-#ifdef QT_KEYPAD_NAVIGATION
-    if (QApplication::keypadNavigationEnabled())
-        setEditFocus(true);
-#endif
+    */
     ev->accept();
-    if ((ev->button() & style()->styleHint(QStyle::SH_Slider_AbsoluteSetButtons)) == ev->button()) {
-        QStyleOptionSlider opt;
-        initStyleOption(&opt);
-        const QRect sliderRect = style()->subControlRect(QStyle::CC_Slider, &opt, QStyle::SC_SliderHandle, this);
-        const QPoint center = sliderRect.center() - sliderRect.topLeft();
-        // to take half of the slider off for the setSliderPosition call we use the center - topLeft
+    ELEMENT elem = SliderProperties::getElement(geometry(),range,ev->pos());
 
-        setSliderPosition(d->pixelPosToRangeValue(d->pick(ev->pos() - center)));
-        triggerAction(SliderMove);
-        setRepeatAction(SliderNoAction);
-        d->pressedControl = QStyle::SC_SliderHandle;
-        update();
-    } else if ((ev->button() & style()->styleHint(QStyle::SH_Slider_PageSetButtons)) == ev->button()) {
-        QStyleOptionSlider opt;
-        initStyleOption(&opt);
-        d->pressedControl = style()->hitTestComplexControl(QStyle::CC_Slider,
-                                                           &opt, ev->pos(), this);
-        SliderAction action = SliderNoAction;
-        if (d->pressedControl == QStyle::SC_SliderGroove) {
-            const QRect sliderRect = style()->subControlRect(QStyle::CC_Slider, &opt, QStyle::SC_SliderHandle, this);
-            int pressValue = d->pixelPosToRangeValue(d->pick(ev->pos() - sliderRect.center() + sliderRect.topLeft()));
-            d->pressValue = pressValue;
-            if (pressValue > d->value)
-                action = SliderPageStepAdd;
-            else if (pressValue < d->value)
-                action = SliderPageStepSub;
-            if (action) {
-                triggerAction(action);
-                setRepeatAction(action);
-            }
-        }
-    } else {
-        ev->ignore();
-        return;
+    if (elem != QDoubleSlider::NONE) {
+      tracking = elem;
     }
+    
+    std::cout<<"Tracking ";
 
-    if (d->pressedControl == QStyle::SC_SliderHandle) {
-        QStyleOptionSlider opt;
-        initStyleOption(&opt);
-        setRepeatAction(SliderNoAction);
-        QRect sr = style()->subControlRect(QStyle::CC_Slider, &opt, QStyle::SC_SliderHandle, this);
-        d->clickOffset = d->pick(ev->pos() - sr.topLeft());
-        update(sr);
-        setSliderDown(true);
+    switch(tracking) {
+    case QDoubleSlider::NONE:
+      std::cout<<"NONE";
+      break;
+    case QDoubleSlider::FIRST:
+      std::cout<<"FIRST";
+      break;
+    case QDoubleSlider::SECOND:
+      std::cout<<"SECOND";
+      break;
+    default:
+      abort();
     }
+    std::cout<<std::endl;
 }
 
 /*!
     \reimp
 */
-void QSlider::mouseMoveEvent(QMouseEvent *ev)
+void QDoubleSlider::mouseMoveEvent(QMouseEvent *ev)
 {
-    Q_D(QSlider);
+    Q_D(QDoubleSlider);
+    /*
     if (d->pressedControl != QStyle::SC_SliderHandle) {
         ev->ignore();
         return;
     }
+    */
     ev->accept();
+    /*
     int newPosition = d->pixelPosToRangeValue(d->pick(ev->pos()) - d->clickOffset);
     QStyleOptionSlider opt;
     initStyleOption(&opt);
     setSliderPosition(newPosition);
-}
+    */
+    QRect bbox = geometry();
+    if (tracking!=NONE) {
+      int val=100*(ev->pos().x()-SliderProperties::getGrooveX(bbox))/SliderProperties::getGrooveWidth(bbox);
+      std::cout<<ev->pos().x()<<std::endl;
+      if (val<0)
+	val=0;
+      if (val>99)
+	val=99;
 
+      std::cout<<"New val:"<<val<<std::endl;
 
-/*!
-    \reimp
-*/
-void QSlider::mouseReleaseEvent(QMouseEvent *ev)
-{
-    Q_D(QSlider);
-    if (d->pressedControl == QStyle::SC_None || ev->buttons()) {
-        ev->ignore();
-        return;
+      QPair<int,int> newRange=range;
+
+      if (tracking==FIRST) {
+	newRange.first=val;
+	if (val>newRange.second)
+	  newRange.second=val;
+      }
+      else if(tracking==SECOND) {
+	newRange.second=val;
+	if (val<newRange.first)
+	  newRange.first=val;
+      }
+      range = newRange;
+      repaint();
+	
     }
-    ev->accept();
-    QStyle::SubControl oldPressed = QStyle::SubControl(d->pressedControl);
-    d->pressedControl = QStyle::SC_None;
-    setRepeatAction(SliderNoAction);
-    if (oldPressed == QStyle::SC_SliderHandle)
-        setSliderDown(false);
-    QStyleOptionSlider opt;
-    initStyleOption(&opt);
-    opt.subControls = oldPressed;
-    update(style()->subControlRect(QStyle::CC_Slider, &opt, oldPressed, this));
+}
+
+
+/*!
+    \reimp
+*/
+void QDoubleSlider::mouseReleaseEvent(QMouseEvent *ev)
+{
+    tracking=NONE;
 }
 
 /*!
     \reimp
 */
-QSize QSlider::sizeHint() const
+QSize QDoubleSlider::sizeHint() const
 {
-    Q_D(const QSlider);
+    Q_D(const QDoubleSlider);
     ensurePolished();
     const int SliderLength = 84, TickSpace = 5;
     QStyleOptionSlider opt;
@@ -565,9 +758,9 @@ QSize QSlider::sizeHint() const
 /*!
     \reimp
 */
-QSize QSlider::minimumSizeHint() const
+QSize QDoubleSlider::minimumSizeHint() const
 {
-    Q_D(const QSlider);
+    Q_D(const QDoubleSlider);
     QSize s = sizeHint();
     QStyleOptionSlider opt;
     initStyleOption(&opt);
@@ -580,75 +773,75 @@ QSize QSlider::minimumSizeHint() const
 }
 
 /*!
-    \property QSlider::tickPosition
+    \property QDoubleSlider::tickPosition
     \brief the tickmark position for this slider
 
-    The valid values are described by the QSlider::TickPosition enum.
+    The valid values are described by the QDoubleSlider::TickPosition enum.
 
-    The default value is \l QSlider::NoTicks.
+    The default value is \l QDoubleSlider::NoTicks.
 
     \sa tickInterval
 */
 
-void QSlider::setTickPosition(TickPosition position)
+void QDoubleSlider::setTickPosition(QSlider::TickPosition position)
 {
-    Q_D(QSlider);
+    Q_D(QDoubleSlider);
     d->tickPosition = position;
     d->resetLayoutItemMargins();
     update();
     updateGeometry();
 }
 
-QSlider::TickPosition QSlider::tickPosition() const
+QSlider::TickPosition QDoubleSlider::tickPosition() const
 {
     return d_func()->tickPosition;
 }
 
 /*!
-    \fn TickPosition QSlider::tickmarks() const
+    \fn TickPosition QDoubleSlider::tickmarks() const
     \compat
 
     Use tickPosition() instead.
 */
 
 /*!
-    \fn QSlider::setTickmarks(TickPosition position)
+    \fn QDoubleSlider::setTickmarks(TickPosition position)
     \compat
 
     Use setTickPosition() instead.
 */
 
 /*!
-    \property QSlider::tickInterval
+    \property QDoubleSlider::tickInterval
     \brief the interval between tickmarks
 
     This is a value interval, not a pixel interval. If it is 0, the
-    slider will choose between singleStep() and pageStep().
+    slider will choose between lineStep() and pageStep().
 
     The default value is 0.
 
     \sa tickPosition, lineStep(), pageStep()
 */
 
-void QSlider::setTickInterval(int ts)
+void QDoubleSlider::setTickInterval(int ts)
 {
     d_func()->tickInterval = qMax(0, ts);
     update();
 }
 
-int QSlider::tickInterval() const
+int QDoubleSlider::tickInterval() const
 {
     return d_func()->tickInterval;
 }
 
 /*!
-    \fn void QSlider::addStep()
+    \fn void QDoubleSlider::addStep()
 
     Use setValue() instead.
 */
 
 /*!
-    \fn void QSlider::subtractStep()
+    \fn void QDoubleSlider::subtractStep()
 
     Use setValue() instead.
 */
@@ -656,7 +849,7 @@ int QSlider::tickInterval() const
 /*! \internal
     Returns the style option for slider.
 */
-Q_GUI_EXPORT QStyleOptionSlider qt_qsliderStyleOption(QSlider *slider)
+Q_GUI_EXPORT QStyleOptionSlider qt_qsliderStyleOption(QDoubleSlider *slider)
 {
     QStyleOptionSlider sliderOption;
     slider->initStyleOption(&sliderOption);
