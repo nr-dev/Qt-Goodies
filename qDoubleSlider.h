@@ -43,6 +43,7 @@
 #define QDOUBLESLIDER_H
 
 #include <QtGui/QSlider>
+#include "qabstractslider2.h"
 
 QT_BEGIN_HEADER
 
@@ -56,7 +57,10 @@ class Q_GUI_EXPORT QDoubleSlider : public QAbstractSlider
 {
     Q_OBJECT
 
+    typedef QPair<int,int> range_t;
+
       //    Q_ENUMS(TickPosition)
+      Q_PROPERTY(range_t range READ range WRITE setValue);
       Q_PROPERTY(QSlider::TickPosition tickPosition READ tickPosition WRITE setTickPosition)
     Q_PROPERTY(int tickInterval READ tickInterval WRITE setTickInterval)
 
@@ -69,14 +73,6 @@ public:
         TicksRight = TicksBelow,
         TicksBothSides = 3
 
-#if defined(QT3_SUPPORT) && !defined(Q_MOC_RUN)
-        ,NoMarks = NoTicks,
-        Above = TicksAbove,
-        Left = TicksAbove,
-        Below = TicksBelow,
-        Right = TicksRight,
-        Both = TicksBothSides
-#endif
     };
 
     explicit QDoubleSlider(QWidget *parent = 0);
@@ -95,6 +91,18 @@ public:
 
     bool event(QEvent *event);
 
+    const range_t & range() {
+      return _range;
+    }
+    
+    void changeEvent(QEvent *ev);
+
+ signals:
+    void valueChanged(QPair<int,int> range);
+
+ public slots:
+    void setValue(const QPair<int,int> & value);
+     
 protected:
     void paintEvent(QPaintEvent *ev);
     void mousePressEvent(QMouseEvent *ev);
@@ -102,32 +110,19 @@ protected:
     void mouseMoveEvent(QMouseEvent *ev);
     void initStyleOption(QStyleOptionSlider *option) const;
 
-#ifdef QT3_SUPPORT
-public:
-    QT3_SUPPORT_CONSTRUCTOR QDoubleSlider(QWidget *parent, const char *name);
-    QT3_SUPPORT_CONSTRUCTOR QDoubleSlider(Qt::Orientation, QWidget *parent, const char *name);
-    QT3_SUPPORT_CONSTRUCTOR QDoubleSlider(int minValue, int maxValue, int pageStep, int value,
-                                  Qt::Orientation orientation,
-                                  QWidget *parent = 0, const char *name = 0);
-    inline QT3_SUPPORT void setTickmarks(TickPosition position) { setTickPosition(position); }
-    inline QT3_SUPPORT TickPosition tickmarks() const { return tickPosition(); }
-public Q_SLOTS:
-    inline QT_MOC_COMPAT void addStep() { triggerAction(SliderSingleStepAdd); }
-    inline QT_MOC_COMPAT void subtractStep() { triggerAction(SliderSingleStepSub); }
-#endif
-
 private:
     friend Q_GUI_EXPORT QStyleOptionSlider qt_qsliderStyleOption(QDoubleSlider *slider);
-
-    Q_DISABLE_COPY(QDoubleSlider)
-    Q_DECLARE_PRIVATE(QDoubleSlider)
-
-      friend class SliderProperties;
-
-      enum ELEMENT { NONE=0x0, FIRST=0x1, SECOND=0x2};
-      QPair <int,int> range;
     
-      ELEMENT tracking;
+    Q_DISABLE_COPY(QDoubleSlider);
+    Q_DECLARE_PRIVATE(QDoubleSlider);
+
+    friend class SliderProperties;
+
+    range_t _range;
+    
+    enum ELEMENT { NONE=0x0, FIRST=0x1, SECOND=0x2};
+    
+    ELEMENT tracking;
 };
 
 //QT_END_NAMESPACE

@@ -38,7 +38,7 @@
      //slider->setTickPosition(QSlider::TicksBelow);
      //slider->setSizePolicy(QSizePolicy(QSizePolicy::Expanding,QSizePolicy::Expanding));
      slider->setMinimumWidth(500);
-     mainWin.resize(500,40);
+     mainWin.resize(500,80);
 
      mainWin.setCentralWidget(w);
      

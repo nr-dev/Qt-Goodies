@@ -14,6 +14,6 @@ all: test
 clean:
 	rm -f *.o
 
-test: test.o qDoubleSlider.o mqDoubleSlider.o
+test: test.o qDoubleSlider.o mqDoubleSlider.o #qabstractslider2.o mqabstractslider2.o
 	$(LD) $(LDFLAGS) -o test test.o mqDoubleSlider.o qDoubleSlider.o
 
