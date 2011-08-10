@@ -43,7 +43,6 @@
 #define QDOUBLESLIDER_H
 
 #include <QtGui/QSlider>
-#include "qabstractslider2.h"
 
 QT_BEGIN_HEADER
 
@@ -53,7 +52,7 @@ QT_MODULE(Gui)
 
 class QDoubleSliderPrivate;
 class QStyleOptionSlider;
-class Q_GUI_EXPORT QDoubleSlider : public QAbstractSlider
+class Q_GUI_EXPORT QDoubleSlider : public QWidget
 {
     Q_OBJECT
 
@@ -95,7 +94,7 @@ public:
       return _range;
     }
     
-    void changeEvent(QEvent *ev);
+    //    void changeEvent(QEvent *ev);
 
  signals:
     void valueChanged(QPair<int,int> range);
@@ -104,6 +103,8 @@ public:
     void setValue(const QPair<int,int> & value);
      
 protected:
+    void init();
+    
     void paintEvent(QPaintEvent *ev);
     void mousePressEvent(QMouseEvent *ev);
     void mouseReleaseEvent(QMouseEvent *ev);
@@ -114,7 +115,6 @@ private:
     friend Q_GUI_EXPORT QStyleOptionSlider qt_qsliderStyleOption(QDoubleSlider *slider);
     
     Q_DISABLE_COPY(QDoubleSlider);
-    Q_DECLARE_PRIVATE(QDoubleSlider);
 
     friend class SliderProperties;
 
