@@ -51,10 +51,8 @@
 #include <QtGui/QStyle>
 #include <QtGui/QStyleOption>
 #include <QtCore/QDebug>
-#include "qabstractslider_p.h"
 
 QT_BEGIN_NAMESPACE
-
 
 /*!
     Initialize \a option with the values from this QDoubleSlider. This method
