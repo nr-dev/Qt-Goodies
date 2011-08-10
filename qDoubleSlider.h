@@ -59,7 +59,7 @@ class Q_GUI_EXPORT QDoubleSlider : public QWidget
     typedef QPair<int,int> range_t;
 
       //    Q_ENUMS(TickPosition)
-      Q_PROPERTY(range_t range READ range WRITE setValue);
+      Q_PROPERTY(range_t range READ range WRITE setValue)
       Q_PROPERTY(QSlider::TickPosition tickPosition READ tickPosition WRITE setTickPosition)
     Q_PROPERTY(int tickInterval READ tickInterval WRITE setTickInterval)
 
@@ -93,7 +93,7 @@ public:
     const range_t & range() {
       return _range;
     }
-    
+
     //    void changeEvent(QEvent *ev);
 
  signals:
@@ -101,28 +101,28 @@ public:
 
  public slots:
     void setValue(const QPair<int,int> & value);
-     
-protected:
+
+ protected:
     void init();
-    
+
     void paintEvent(QPaintEvent *ev);
     void mousePressEvent(QMouseEvent *ev);
     void mouseReleaseEvent(QMouseEvent *ev);
     void mouseMoveEvent(QMouseEvent *ev);
     void initStyleOption(QStyleOptionSlider *option) const;
 
-private:
+ public:
+    //private:
     friend Q_GUI_EXPORT QStyleOptionSlider qt_qsliderStyleOption(QDoubleSlider *slider);
-    
-    Q_DISABLE_COPY(QDoubleSlider);
 
-    friend class SliderProperties;
+    Q_DISABLE_COPY(QDoubleSlider)
 
     range_t _range;
-    
+
     enum ELEMENT { NONE=0x0, FIRST=0x1, SECOND=0x2};
-    
+
     ELEMENT tracking;
+    QSlider::TickPosition tickPosition_;
 };
 
 //QT_END_NAMESPACE

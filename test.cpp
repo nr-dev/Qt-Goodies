@@ -12,7 +12,7 @@
  int main(int argc, char *argv[])
  {
    //Q_INIT_RESOURCE(application);
-  
+
      QApplication app(argc, argv);
      app.setOrganizationName("Numerical Rocks");
      app.setApplicationName("Application Example");
@@ -22,7 +22,7 @@
      app.setStyle(style);
 
      QMainWindow mainWin;
-     QLayout * mLayout=mainWin.layout();
+
      //mainWin.setLayout(mLayout);
 
      /*
@@ -55,7 +55,7 @@
      mainWin.resize(500,80);
 
      //mainWin.setCentralWidget(w);
-     
+
 
      mainWin.show();
      return app.exec();
