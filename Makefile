@@ -1,21 +1,28 @@
-PACKAGEDIR:=$(HOME)/packages
+include Makefile.inc
 
-CXXFLAGS:= -I$(PACKAGEDIR)/include -I./qt-everywhere-opensource-src-4.6.3/include/QtGui -I./qt-everywhere-opensource-src-4.6.3/include/QtCore -g2
-LDFLAGS:= -Wl,-rpath=$(PACKAGEDIR)/lib -L$(PACKAGEDIR)/lib -lQtGui 
+CXXINCLUDES:= $(CXXINCLUDES)
+CXXFLAGS:= $(CXXINCLUDES) $(CXXFLAGS) -fPIC
+LDFLAGS:= $(LDFLAGS) -lQtGui
 LD:=g++
 
 .PHONY: clean all distclean
 
 m%.cpp: %.h
-	moc $< -o $@
+	moc $(CXXINCLUDES) $< -o $@
 
-all: test
+all: test SettingsEditor libQRangeSliderDesigner.so
 
 clean:
 	rm -f *.o
 
-test: test.o qDoubleSlider.o mqDoubleSlider.o #qabstractslider2.o mqabstractslider2.o
-	$(LD) $(LDFLAGS) -o test test.o mqDoubleSlider.o qDoubleSlider.o
+test: test.o qDoubleSlider.o mqDoubleSlider.o qRangeSlider.o mqRangeSlider.o
+	$(LD) $(LDFLAGS) -o test test.o mqDoubleSlider.o qDoubleSlider.o qRangeSlider.o mqRangeSlider.o
+
+SettingsEditor: settingsEditor.o
+	$(LD) $(LDFLAGS) -o SettingsEditor settingsEditor.o
+
+libQRangeSliderDesigner.so: qDoubleSlider.o mqDoubleSlider.o qRangeSlider.o mqRangeSlider.o qRangeSliderDesigner.o mqRangeSliderDesigner.o
+	$(LD) -shared $(LDFLAGS) -o libQRangeSliderDesigner.so qDoubleSlider.o mqDoubleSlider.o qRangeSlider.o mqRangeSlider.o qRangeSliderDesigner.o mqRangeSliderDesigner.o
 
 distclean: clean
-	rm -f test
+	rm -f test *.so SettingsEditor

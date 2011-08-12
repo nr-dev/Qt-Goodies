@@ -30,14 +30,14 @@ QSettings * loadSettings(QStringList & args) {
   QString filename;
 
   QSettings * settings = 0;
-  
+
   for (int i=0;i<args.length();++i) {
     if (args[i]=="-f") {
       filename=args.takeAt(i+1);
       args.takeAt(i);
     }
   }
-  
+
   if (!filename.isEmpty()) {
     settings = new QSettings(filename, QSettings::NativeFormat);
   }

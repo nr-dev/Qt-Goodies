@@ -22,6 +22,7 @@
      app.setStyle(style);
 
      QMainWindow mainWin;
+     mainWin.setContentsMargins(0,0,0,0);
 
      //mainWin.setLayout(mLayout);
 
@@ -48,11 +49,7 @@
 #endif
      //slider->setTickPosition(QSlider::TicksBelow);
      slider->setSizePolicy(QSizePolicy(QSizePolicy::Expanding,QSizePolicy::Expanding));
-     slider->setMinimumWidth(500);
-
      layout->addWidget(slider);
-
-     mainWin.resize(500,80);
 
      //mainWin.setCentralWidget(w);
 
