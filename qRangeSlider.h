@@ -59,7 +59,8 @@ class Q_GUI_EXPORT QRangeSlider : public QWidget
     typedef QPair<int,int> range_t;
 
       //    Q_ENUMS(TickPosition)
-      Q_PROPERTY(range_t range READ range WRITE setValue)
+      Q_PROPERTY(range_t range READ range WRITE setRange )
+      Q_PROPERTY(range_t maxRange READ maxRange WRITE setMaxRange )
       Q_PROPERTY(QSlider::TickPosition tickPosition READ tickPosition WRITE setTickPosition)
     Q_PROPERTY(int tickInterval READ tickInterval WRITE setTickInterval)
 
@@ -91,16 +92,20 @@ public:
     bool event(QEvent *event);
 
     const range_t & range() {
-      return _range;
+      return range_;
     }
 
-    //    void changeEvent(QEvent *ev);
+    const range_t & maxRange() {
+      return maxRange_;
+    }
 
  signals:
-    void valueChanged(QPair<int,int> range);
+    void rangeChanged(QPair<int,int> range);
+    void maxRangeChanged(QPair<int,int> range);
 
  public slots:
-    void setValue(const QPair<int,int> & value);
+    void setRange(const QPair<int,int> & value);
+    void setMaxRange(const QPair<int,int> & value);
 
  protected:
     void init();
@@ -118,13 +123,17 @@ public:
 
     Q_DISABLE_COPY(QRangeSlider)
 
-    range_t _range;
+    range_t range_;
+    range_t maxRange_;
 
     enum ELEMENT { NONE=0x0, FIRST=0x1, SECOND=0x2};
 
     ELEMENT tracking;
     QSlider::TickPosition tickPosition_;
     Qt::Orientation orientation_;
+
+    static void clamp(int & value, const range_t & clamp_to);
+    static void clamp(range_t & value, const range_t & clamp_to);
 };
 
 //QT_END_NAMESPACE
