@@ -11,8 +11,6 @@
 
  int main(int argc, char *argv[])
  {
-   //Q_INIT_RESOURCE(application);
-
      QApplication app(argc, argv);
      app.setOrganizationName("Numerical Rocks");
      app.setApplicationName("Application Example");
@@ -24,19 +22,10 @@
      QMainWindow mainWin;
      mainWin.setContentsMargins(0,0,0,0);
 
-     //mainWin.setLayout(mLayout);
-
-     /*
-     QWidget * w = new QPushButton(&mainWin);
-     mainWin.setCentralWidget(w);
-     */
      QWidget * w = new QWidget(&mainWin);
      mainWin.setCentralWidget(w);
 
 
-     //QLayout * layout = new QBoxLayout(QBoxLayout::LeftToRight);
-     //w->setLayout(layout);
-     //QLayout * layout = new QGridLayout(w);
      QLayout * layout = new QHBoxLayout(w);
      w->setLayout(layout);
 
@@ -51,9 +40,6 @@
      //slider->setTickPosition(QSlider::TicksBelow);
      slider->setSizePolicy(QSizePolicy(QSizePolicy::Expanding,QSizePolicy::Expanding));
      layout->addWidget(slider);
-
-     //mainWin.setCentralWidget(w);
-
 
      mainWin.show();
      return app.exec();
