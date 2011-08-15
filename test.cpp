@@ -44,8 +44,9 @@
      QSlider * slider;
      slider = new QSlider(Qt::Horizontal,w);
 #else
-     QDoubleSlider * slider;
-     slider = new QDoubleSlider(Qt::Horizontal,w);
+     QRangeSlider * slider;
+     slider = new QRangeSlider(Qt::Horizontal,w);
+     slider->setMaxRange(QPair<int,int>(50,200));
 #endif
      //slider->setTickPosition(QSlider::TicksBelow);
      slider->setSizePolicy(QSizePolicy(QSizePolicy::Expanding,QSizePolicy::Expanding));
