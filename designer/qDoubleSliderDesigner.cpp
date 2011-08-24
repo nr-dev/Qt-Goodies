@@ -1,6 +1,6 @@
 #include "qDoubleSliderDesigner.h"
 
-#include "qDoubleSlider.h"
+#include "../qDoubleSlider.h"
 
 #include <QtCore/QtPlugin>
 #ifndef QTGOODIES_INCLUDE_PREFIX

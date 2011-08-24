@@ -25,6 +25,7 @@ QDoubleSlider::setup()
   QLayout * layout=new QHBoxLayout(this);
   setLayout(layout);
   layout->addWidget(slider_);
+  layout->setContentsMargins(0,0,0,0);
   maxRange_=range_t(0,100);
   slider_->setMaxRange(QPair<int,int>(0,10000));
   bool ok=true;

@@ -1,6 +1,6 @@
 #include "qRangeSliderDesigner.h"
 
-#include "qRangeSlider.h"
+#include "../qRangeSlider.h"
 
 #include <QtCore/QtPlugin>
 #ifndef QTGOODIES_INCLUDE_PREFIX

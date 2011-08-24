@@ -5,15 +5,12 @@ CXXFLAGS:= $(CXXINCLUDES) $(CXXFLAGS) -fPIC
 LDFLAGS:= $(LDFLAGS) -lQtGui
 LD:=g++
 
-.PHONY: clean all distclean
+.PHONY: clean all designer distclean
 
 m%.cpp: %.h
 	moc $(CXXINCLUDES) $< -o $@
 
-all: test SettingsEditor libQRangeSliderDesigner.so libQDoubleSliderDesigner.so
-
-clean:
-	rm -f *.o
+all: test SettingsEditor designer
 
 test: test.o qDoubleSlider.o mqDoubleSlider.o qRangeSlider.o mqRangeSlider.o
 	$(LD) $(LDFLAGS) -o $@ $^
@@ -21,11 +18,13 @@ test: test.o qDoubleSlider.o mqDoubleSlider.o qRangeSlider.o mqRangeSlider.o
 SettingsEditor: settingsEditor.o
 	$(LD) $(LDFLAGS) -o $@ $^
 
-libQRangeSliderDesigner.so: qRangeSlider.o mqRangeSlider.o qRangeSliderDesigner.o mqRangeSliderDesigner.o
-	$(LD) -shared $(LDFLAGS) -o $@ $^
+designer: qDoubleSlider.o mqDoubleSlider.o qRangeSlider.o mqRangeSlider.o
+	cd designer; $(MAKE) 
 
-libQDoubleSliderDesigner.so: qDoubleSlider.o mqDoubleSlider.o qRangeSlider.o mqRangeSlider.o qDoubleSliderDesigner.o mqDoubleSliderDesigner.o
-	$(LD) -shared $(LDFLAGS) -o $@ $^
+clean:
+	rm -f *.o
+	cd designer; $(MAKE) clean
 
 distclean: clean
 	rm -f test *.so SettingsEditor
+	cd designer; $(MAKE) distclean

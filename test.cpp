@@ -29,14 +29,8 @@ int main(int argc, char *argv[])
   QLayout * layout = new QHBoxLayout(w);
   w->setLayout(layout);
 
-#if 0
-  QSlider * slider;
-  slider = new QSlider(Qt::Horizontal,w);
-#else
-  QRangeSlider * slider;
-  slider = new QRangeSlider(Qt::Horizontal,w);
-  slider->setMaxRange(QPair<int,int>(50,200));
-#endif
+  QDoubleSlider * slider;
+  slider = new QDoubleSlider(Qt::Horizontal,w);
   //slider->setTickPosition(QSlider::TicksBelow);
   slider->setSizePolicy(QSizePolicy(QSizePolicy::Expanding,QSizePolicy::Expanding));
   layout->addWidget(slider);
