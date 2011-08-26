@@ -88,12 +88,13 @@ void QRangeSlider::initStyleOption(QStyleOptionSlider *option) const
     groove and translates the handle's position into an integer value
     within the legal range.
 
-    QRangeSlider has very few of its own functions; most of the functionality is in
-    QAbstractSlider. The most useful functions are setValue() to set
-    the slider directly to some value; triggerAction() to simulate
-    the effects of clicking (useful for shortcut keys);
-    setSingleStep(), setPageStep() to set the steps; and setMinimum()
-    and setMaximum() to define the range of the scroll bar.
+    QRangeSlider has very few of its own functions; most of the
+    functionality is in QAbstractSlider. The most useful functions are
+    setValue() to set the slider directly to some value;
+    triggerAction() to simulate the effects of clicking (useful for
+    shortcut keys); setSingleStep(), setPageStep() to set the steps;
+    and setMinimum() and setMaximum() to define the range of the
+    scroll bar.
 
     QRangeSlider provides methods for controlling tickmarks.  You can use
     setTickPosition() to indicate where you want the tickmarks to be,
@@ -207,19 +208,28 @@ QRangeSlider::~QRangeSlider()
 
 namespace SliderProperties {
   static const float factor = 0.5;
+  static const int grooveMarginX = 20;
 
-  enum WHICH { NONE=0, FIRST=0x1, SECOND=0x2, BOTH=FIRST|SECOND };
+  enum WHICH { NONE = 0,
+	       FIRST = 0x1,
+	       SECOND = 0x2,
+	       BOTH = FIRST|SECOND };
 
-  QPolygon getMarkerArea(const QRect & bbox, const QPair<int,int> & range, const QPair<int,int> & maxRange, WHICH which);
+  QPolygon getMarkerArea(const QRect & bbox,
+			 const QPair<int,int> & range,
+			 const QPair<int,int> & maxRange,
+			 WHICH which);
 
    int getGrooveX(const QRect & bbox) {
-    return int(bbox.x()+factor*.5*bbox.width());
+     //    return int(bbox.x()+factor*.5*bbox.width());
+     return int(bbox.x() + grooveMarginX);
   }
    int getGrooveY(const QRect & bbox) {
     return int(bbox.y()+factor*.5*bbox.height());
   }
    int getGrooveWidth(const QRect & bbox) {
-    return int((1.0-factor)*bbox.width());
+     //    return int((1.0-factor)*bbox.width());
+     return int(bbox.width()-grooveMarginX*2);
   }
    int getGrooveHeight(const QRect & bbox) {
     return int((1.0-factor)*bbox.height());

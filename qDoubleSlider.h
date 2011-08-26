@@ -2,12 +2,24 @@
 #define QDOUBLESLIDER_H
 
 #include "qRangeSlider.h"
+#include <limits>
 
 class QDoubleSlider : public QWidget
 {
   Q_OBJECT
     public:
   typedef QPair<double,double> range_t;
+
+  static const double numericalLimitMax() {
+    return std::numeric_limits<float>::max();
+  }
+  static const double numericalLimitMin() {
+    return std::numeric_limits<float>::min();
+  }
+  static range_t numericalLimits() {
+    return range_t(numericalLimitMin(),numericalLimitMax());
+  }
+
 
   Q_PROPERTY(range_t range READ range WRITE setRange NOTIFY rangeChanged)
   Q_PROPERTY(range_t maxRange READ maxRange WRITE setMaxRange NOTIFY maxRangeChanged)
@@ -30,6 +42,9 @@ class QDoubleSlider : public QWidget
   void rangeChanged(QPair<int,int>);
 
  private:
+  static bool clamp(QPair<double,double> & value,
+		    const QPair<double,double> & limits);
+  static bool clamp(double & value, const QPair<double,double> & limits);
   void setup();
   QRangeSlider * slider_;
   QPair<double,double> maxRange_;
