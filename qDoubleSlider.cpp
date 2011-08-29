@@ -1,6 +1,5 @@
 #include "qDoubleSlider.h"
 
-#include <QtCore/QDebug>
 #include <QtGui/QHBoxLayout>
 #include <cassert>
 
@@ -26,9 +25,10 @@ QDoubleSlider::setup()
   setLayout(layout);
   layout->addWidget(slider_);
   layout->setContentsMargins(0,0,0,0);
-  maxRange_ = range_t(0,100);
-  range_ = range_t(0,100);
+  maxRange_ = numericalLimits();
+  range_ = maxRange_;
   slider_->setMaxRange(QPair<int,int>(0,10000));
+  slider_->setRange(QPair<int,int>(0,10000));
   bool ok = true;
   ok &= connect(slider_,SIGNAL(rangeChanged(QPair<int,int>)),
 		this,SLOT(rangeChanged(QPair<int,int>)));
@@ -52,10 +52,13 @@ void
 QDoubleSlider::setRange(QPair<double,double> range)
 {
   clamp(range,maxRange());
+  range_ = range;
 
   //Need to allow for perfect values
-  QPair<int,int> nRange=convertToRangeSlider(range);
-  QPair<int,int> oRange=slider_->range();
+  QPair<int,int> nRange = convertToRangeSlider(range);
+  QPair<int,int> oRange = slider_->range();
+
+  expectValue_ = nRange;
 
   if (!cmp(oRange,nRange,1)) {
     slider_->setRange(nRange);
@@ -66,19 +69,18 @@ void
 QDoubleSlider::setMaxRange(QPair<double,double> maxRange)
 {
   clamp(maxRange, numericalLimits());
+  QPair<double,double> oRange = range();
+
   maxRange_ = maxRange;
-  slider_->setRange(convertToRangeSlider(maxRange));
+
+  setRange(oRange);
   emit maxRangeChanged(maxRange_);
-  setRange(range());
 }
 
 QDoubleSlider::range_t
 QDoubleSlider::range() const
 {
-  QPair<int,int> sliderRange = slider_->range();
-  range_t retVal(convertFromRangeSlider(sliderRange.first),convertFromRangeSlider(sliderRange.second));
-
-  return retVal;
+  return range_;
 }
 
 QDoubleSlider::range_t
@@ -121,8 +123,11 @@ void
 QDoubleSlider::rangeChanged(QPair<int,int> value)
 {
   QPair<double,double> range = convertFromRangeSlider(value);
-  range_ = range;
-  emit rangeChanged(range);
+
+  if (!cmp(value,expectValue_,1)) {
+    range_ = range;
+    emit rangeChanged(range);
+  }
 }
 
 QPair<int,int>
