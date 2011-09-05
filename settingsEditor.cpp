@@ -101,20 +101,20 @@ show(QSettings & settings, const QString & path, int level, QTextStream & out)
 
      if(command=="show") {
        if (key.isEmpty()) {
-	 show(*settings,"", 0, out);
-	 out.flush();
+         show(*settings,"", 0, out);
+         out.flush();
        }
        else {
-	 QString value=settings->value(key).toString();
-	 out<<key<<"=\""<<value<<"\"\n";
-	 out.flush();
+         QString value=settings->value(key).toString();
+         out<<key<<"=\""<<value<<"\"\n";
+         out.flush();
        }
      }
      else if(command=="set") {
        QVariant oldValue = settings->value(key);
        if(!oldValue.isNull() && !oldValue.canConvert(QVariant::String)) {
-	 std::cerr<<"You are trying to set a non-representable value with a string. This is not supported";
-	 exit(1);
+         std::cerr<<"You are trying to set a non-representable value with a string. This is not supported";
+         exit(1);
        }
 
        settings->setValue(key, value);

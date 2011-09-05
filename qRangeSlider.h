@@ -60,7 +60,7 @@ class Q_GUI_EXPORT QRangeSlider : public QWidget
 
       //    Q_ENUMS(TickPosition)
       Q_PROPERTY(range_t range READ range WRITE setRange )
-      Q_PROPERTY(range_t maxRange READ maxRange WRITE setMaxRange )
+      Q_PROPERTY(range_t cutoffRange READ cutoffRange WRITE setCutoffRange )
       Q_PROPERTY(QSlider::TickPosition tickPosition READ tickPosition WRITE setTickPosition)
     Q_PROPERTY(int tickInterval READ tickInterval WRITE setTickInterval)
 
@@ -95,17 +95,17 @@ public:
       return range_;
     }
 
-    const range_t & maxRange() {
-      return maxRange_;
+    const range_t & cutoffRange() {
+      return cutoffRange_;
     }
 
  signals:
     void rangeChanged(QPair<int,int> range);
-    void maxRangeChanged(QPair<int,int> range);
+    void cutoffRangeChanged(QPair<int,int> range);
 
  public slots:
     void setRange(const QPair<int,int> & value);
-    void setMaxRange(const QPair<int,int> & value);
+    void setCutoffRange(const QPair<int,int> & value);
 
  protected:
     void init();
@@ -124,7 +124,7 @@ public:
     Q_DISABLE_COPY(QRangeSlider)
 
     range_t range_;
-    range_t maxRange_;
+    range_t cutoffRange_;
 
     enum ELEMENT { NONE=0x0, FIRST=0x1, SECOND=0x2};
 

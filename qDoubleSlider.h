@@ -22,21 +22,21 @@ class QDoubleSlider : public QWidget
 
 
   Q_PROPERTY(range_t range READ range WRITE setRange NOTIFY rangeChanged)
-  Q_PROPERTY(range_t maxRange READ maxRange WRITE setMaxRange NOTIFY maxRangeChanged)
+  Q_PROPERTY(range_t cutoffRange READ cutoffRange WRITE setCutoffRange NOTIFY maxRangeChanged)
 
   explicit QDoubleSlider(QWidget * = 0);
   explicit QDoubleSlider(Qt::Orientation orientation, QWidget *parent = 0);
 
   range_t range() const;
-  range_t maxRange() const;
+  range_t cutoffRange() const;
 
  public slots:
   void setRange(QPair<double,double>);
-  void setMaxRange(QPair<double,double>);
+  void setCutoffRange(QPair<double,double>);
 
  signals:
   void rangeChanged(QPair<double,double>);
-  void maxRangeChanged(QPair<double,double>);
+  void cutoffRangeChanged(QPair<double,double>);
 
   private slots:
   void rangeChanged(QPair<int,int>);
@@ -46,7 +46,7 @@ class QDoubleSlider : public QWidget
 
   QRangeSlider * slider_;
 
-  QPair<double,double> maxRange_;
+  QPair<double,double> cutoffRange_;
   QPair<double,double> range_;
 
   QPair<int,int> expectValue_;
@@ -61,7 +61,7 @@ class QDoubleSlider : public QWidget
   static bool cmp(const QPair<int,int> &, const QPair<int,int> &, uint = 0);
 
   static bool clamp(QPair<double,double> & value,
-		    const QPair<double,double> & limits);
+                    const QPair<double,double> & limits);
   static bool clamp(double & value, const QPair<double,double> & limits);
 };
 

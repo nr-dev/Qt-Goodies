@@ -193,7 +193,7 @@ QRangeSlider::QRangeSlider(Qt::Orientation orientation, QWidget *parent)
 void QRangeSlider::init()
 {
   setSizePolicy(QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed));
-  maxRange_=range_t(0,100);
+  cutoffRange_=range_t(0,100);
   range_=range_t(40,60);
   tracking = NONE;
 }
@@ -211,14 +211,14 @@ namespace SliderProperties {
   static const int grooveMarginX = 20;
 
   enum WHICH { NONE = 0,
-	       FIRST = 0x1,
-	       SECOND = 0x2,
-	       BOTH = FIRST|SECOND };
+               FIRST = 0x1,
+               SECOND = 0x2,
+               BOTH = FIRST|SECOND };
 
   QPolygon getMarkerArea(const QRect & bbox,
-			 const QPair<int,int> & range,
-			 const QPair<int,int> & maxRange,
-			 WHICH which);
+                         const QPair<int,int> & range,
+                         const QPair<int,int> & cutoffRange,
+                         WHICH which);
 
    int getGrooveX(const QRect & bbox) {
      //    return int(bbox.x()+factor*.5*bbox.width());
@@ -234,11 +234,11 @@ namespace SliderProperties {
    int getGrooveHeight(const QRect & bbox) {
     return int((1.0-factor)*bbox.height());
   }
-  int getPosMin(const QRect & bbox, int min, const QPair<int,int> & maxRange) {
-    return int(getGrooveX(bbox)+getGrooveWidth(bbox)*(min-maxRange.first)/(1.0*(maxRange.second-maxRange.first)));
+  int getPosMin(const QRect & bbox, int min, const QPair<int,int> & cutoffRange) {
+    return int(getGrooveX(bbox)+getGrooveWidth(bbox)*(min-cutoffRange.first)/(1.0*(cutoffRange.second-cutoffRange.first)));
   }
-  int getPosMax(const QRect & bbox, int max, const QPair<int,int> & maxRange) {
-     return getPosMin(bbox,max,maxRange);
+  int getPosMax(const QRect & bbox, int max, const QPair<int,int> & cutoffRange) {
+     return getPosMin(bbox,max,cutoffRange);
      //return int(getGrooveX(bbox)+0.01*max*getGrooveWidth(bbox));
   }
 
@@ -247,18 +247,18 @@ namespace SliderProperties {
   }
 
 
-  QRangeSlider::ELEMENT getElement(const QRect & bbox, const QPair<int, int> & range, const QPair<int,int> & maxRange, const QPoint & pos) {
-    QPolygon p = getMarkerArea(bbox, range, maxRange, FIRST);
+  QRangeSlider::ELEMENT getElement(const QRect & bbox, const QPair<int, int> & range, const QPair<int,int> & cutoffRange, const QPoint & pos) {
+    QPolygon p = getMarkerArea(bbox, range, cutoffRange, FIRST);
     if (p.containsPoint(pos,Qt::OddEvenFill))
       return QRangeSlider::FIRST;
-    p = getMarkerArea(bbox, range, maxRange, SECOND);
+    p = getMarkerArea(bbox, range, cutoffRange, SECOND);
     if (p.containsPoint(pos,Qt::OddEvenFill))
       return QRangeSlider::SECOND;
 
     return QRangeSlider::NONE;
   }
 
-  QPolygon getMarkerArea(const QRect & bbox, const QPair<int,int> & range, const QPair<int,int> & maxRange, WHICH which)
+  QPolygon getMarkerArea(const QRect & bbox, const QPair<int,int> & range, const QPair<int,int> & cutoffRange, WHICH which)
   {
 
     QPolygon paintArea;
@@ -267,12 +267,12 @@ namespace SliderProperties {
 
     int pos;
     if (which&FIRST) {
-      pos = getPosMin(bbox,range.first, maxRange);
+      pos = getPosMin(bbox,range.first, cutoffRange);
       width=-width;
     }
     else {
       assert(which&SECOND);
-      pos = getPosMin(bbox,range.second, maxRange);
+      pos = getPosMin(bbox,range.second, cutoffRange);
     }
 
     int y=getGrooveY(bbox);
@@ -376,12 +376,12 @@ void paintGroove(QPainter & p, const QRect & bbox) {
   p.restore();
 }
 
-void paintFilling(QPainter & p, const QRect & bbox, const QPair<int,int> & range, const QPair<int,int> & maxRange) {
+void paintFilling(QPainter & p, const QRect & bbox, const QPair<int,int> & range, const QPair<int,int> & cutoffRange) {
 
   QRect paintBox;
 
-  int x = SliderProperties::getPosMin(bbox,range.first,maxRange);
-  int width = SliderProperties::getPosMax(bbox,range.second,maxRange)-x;
+  int x = SliderProperties::getPosMin(bbox,range.first,cutoffRange);
+  int width = SliderProperties::getPosMax(bbox,range.second,cutoffRange)-x;
 
   paintBox.setX(x);
   paintBox.setY(SliderProperties::getGrooveY(bbox));
@@ -413,18 +413,18 @@ void paintFilling(QPainter & p, const QRect & bbox, const QPair<int,int> & range
 
 }
 
-void paintMarker(QPainter & p, const QRect & bbox, const QPair<int,int> & range, const QPair<int,int> & maxRange, SliderProperties::WHICH which) {
+void paintMarker(QPainter & p, const QRect & bbox, const QPair<int,int> & range, const QPair<int,int> & cutoffRange, SliderProperties::WHICH which) {
 
   QRect paintBox;
 
   p.setBrush(Qt::lightGray);
 
   if (which&SliderProperties::FIRST) {
-    QPolygon poly = SliderProperties::getMarkerArea(bbox, range, maxRange, which);
+    QPolygon poly = SliderProperties::getMarkerArea(bbox, range, cutoffRange, which);
     p.drawPolygon(poly);
   }
   if (which&SliderProperties::SECOND) {
-    QPolygon poly = SliderProperties::getMarkerArea(bbox, range, maxRange, which);
+    QPolygon poly = SliderProperties::getMarkerArea(bbox, range, cutoffRange, which);
     p.drawPolygon(poly);
   }
 }
@@ -462,10 +462,10 @@ void QRangeSlider::paintEvent(QPaintEvent *)
 
 
     paintGroove(p, bbox);
-    paintFilling(p, bbox, range(),maxRange());
+    paintFilling(p, bbox, range(),cutoffRange());
     paintTicks(p,bbox);
-    paintMarker(p, bbox, range(), maxRange(), SliderProperties::FIRST);
-    paintMarker(p, bbox, range(), maxRange(), SliderProperties::SECOND);
+    paintMarker(p, bbox, range(), cutoffRange(), SliderProperties::FIRST);
+    paintMarker(p, bbox, range(), cutoffRange(), SliderProperties::SECOND);
 
 
 
@@ -511,7 +511,7 @@ QRect QRangeSlider::getBBox() const
 void QRangeSlider::mousePressEvent(QMouseEvent *ev)
 {
   //    Q_D(QRangeSlider);
-  ELEMENT elem = SliderProperties::getElement(getBBox(),range(),maxRange(), ev->pos());
+  ELEMENT elem = SliderProperties::getElement(getBBox(),range(),cutoffRange(), ev->pos());
 
   if (elem != QRangeSlider::NONE) {
     ev->accept();
@@ -544,24 +544,24 @@ void QRangeSlider::mouseMoveEvent(QMouseEvent *ev)
   if (tracking!=NONE) {
     ev->accept();
     QRect bbox = getBBox();
-    int val=(maxRange_.second-maxRange_.first)*(ev->pos().x()-SliderProperties::getGrooveX(bbox))/SliderProperties::getGrooveWidth(bbox)+maxRange_.first;
+    int val=(cutoffRange_.second-cutoffRange_.first)*(ev->pos().x()-SliderProperties::getGrooveX(bbox))/SliderProperties::getGrooveWidth(bbox)+cutoffRange_.first;
 
-    if (val<maxRange_.first)
-      val=maxRange_.first;
-    if (val>maxRange_.second)
-      val=maxRange_.second;
+    if (val<cutoffRange_.first)
+      val=cutoffRange_.first;
+    if (val>cutoffRange_.second)
+      val=cutoffRange_.second;
 
     range_t newRange=range();
 
     if (tracking==FIRST) {
       newRange.first=val;
       if (val>newRange.second)
-	newRange.second=val;
+        newRange.second=val;
     }
     else if(tracking==SECOND) {
       newRange.second=val;
       if (val<newRange.first)
-	newRange.first=val;
+        newRange.first=val;
     }
     setRange(newRange);
   }
@@ -583,7 +583,7 @@ void QRangeSlider::clamp(range_t & value, const range_t & clampTo)
 
 void QRangeSlider::setRange(const QPair<int,int> & range_in) {
   range_t range=range_in;
-  clamp(range,maxRange_);
+  clamp(range,cutoffRange_);
   if(this->range_!=range) {
     this->range_=range;
     update();
@@ -591,13 +591,13 @@ void QRangeSlider::setRange(const QPair<int,int> & range_in) {
   }
 }
 
-void QRangeSlider::setMaxRange(const QPair<int,int> & maxRange) {
-  //assert(maxRange.first==0 && "Support for maxRange!=0 not implemented");
-  if(this->maxRange_!=maxRange) {
-    this->maxRange_=maxRange;
+void QRangeSlider::setCutoffRange(const QPair<int,int> & cutoffRange) {
+  //assert(cutoffRange.first==0 && "Support for cutoffRange!=0 not implemented");
+  if(this->cutoffRange_!=cutoffRange) {
+    this->cutoffRange_=cutoffRange;
     setRange(this->range());
     update();
-    emit maxRangeChanged(maxRange);
+    emit cutoffRangeChanged(cutoffRange);
   }
 }
 
