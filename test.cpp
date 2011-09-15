@@ -9,30 +9,28 @@
 #include <QtGui/QBoxLayout>
 #include <QtGui/QPushButton>
 
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
   QApplication app(argc, argv);
   app.setOrganizationName("Numerical Rocks");
   app.setApplicationName("Application Example");
-  QStyle * style;
+  QStyle* style;
   style = new QCleanlooksStyle();
-  //style = new QProxyStyle();
   app.setStyle(style);
 
   QMainWindow mainWin;
-  mainWin.setContentsMargins(0,0,0,0);
+  mainWin.setContentsMargins(0, 0, 0, 0);
 
-  QWidget * w = new QWidget(&mainWin);
+  QWidget* w = new QWidget(&mainWin);
   mainWin.setCentralWidget(w);
 
-
-  QLayout * layout = new QHBoxLayout(w);
+  QLayout* layout = new QHBoxLayout(w);
   w->setLayout(layout);
 
-  QDoubleSlider * slider;
-  slider = new QDoubleSlider(Qt::Horizontal,w);
-  //slider->setTickPosition(QSlider::TicksBelow);
-  slider->setSizePolicy(QSizePolicy(QSizePolicy::Expanding,QSizePolicy::Expanding));
+  QDoubleSlider* slider;
+  slider = new QDoubleSlider(Qt::Horizontal, w);
+  slider->setSizePolicy(QSizePolicy(QSizePolicy::Expanding,
+                                    QSizePolicy::Expanding));
   layout->addWidget(slider);
 
   mainWin.show();

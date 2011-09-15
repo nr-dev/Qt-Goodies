@@ -4,14 +4,14 @@
 #include <cassert>
 
 
-QDoubleSlider::QDoubleSlider(QWidget * parent)
+QDoubleSlider::QDoubleSlider(QWidget* parent)
   : QWidget(parent),
     slider_(new QRangeSlider(this))
 {
   setup();
 }
 
-QDoubleSlider::QDoubleSlider(Qt::Orientation orientation, QWidget *parent)
+QDoubleSlider::QDoubleSlider(Qt::Orientation orientation, QWidget* parent)
   : QWidget(parent),
     slider_(new QRangeSlider(orientation, this))
 {
@@ -21,14 +21,14 @@ QDoubleSlider::QDoubleSlider(Qt::Orientation orientation, QWidget *parent)
 void
 QDoubleSlider::setup()
 {
-  QLayout * layout=new QHBoxLayout(this);
+  QLayout* layout=new QHBoxLayout(this);
   setLayout(layout);
   layout->addWidget(slider_);
   layout->setContentsMargins(0,0,0,0);
   cutoffRange_ = numericalLimits();
   range_ = cutoffRange_;
-  slider_->setCutoffRange(QPair<int,int>(0,10000));
-  slider_->setRange(QPair<int,int>(0,10000));
+  slider_->setCutoffRange(QPair<int, int>(0,10000));
+  slider_->setRange(QPair<int, int>(0,10000));
   bool ok = true;
   ok &= connect(slider_,SIGNAL(rangeChanged(QPair<int,int>)),
                 this,SLOT(rangeChanged(QPair<int,int>)));
@@ -43,20 +43,22 @@ QDoubleSlider::cmp(int a, int b, uint offset)
 }
 
 bool
-QDoubleSlider::cmp(const QPair<int,int> & a, const QPair<int,int> & b, uint offset) {
-  return cmp(a.first, b.first, offset) &&
+QDoubleSlider::cmp(const QPair<int, int>& a,
+                   const QPair<int, int>& b,
+                   uint offset) {
+  return cmp(a.first, b.first, offset)&&
     cmp(a.second, b.second, offset);
 }
 
 void
-QDoubleSlider::setRange(QPair<double,double> range)
+QDoubleSlider::setRange(QPair<double, double> range)
 {
   clamp(range,cutoffRange());
   range_ = range;
 
   //Need to allow for perfect values
-  QPair<int,int> nRange = convertToRangeSlider(range);
-  QPair<int,int> oRange = slider_->range();
+  QPair<int, int> nRange = convertToRangeSlider(range);
+  QPair<int, int> oRange = slider_->range();
 
   expectValue_ = nRange;
 
@@ -66,10 +68,10 @@ QDoubleSlider::setRange(QPair<double,double> range)
 }
 
 void
-QDoubleSlider::setCutoffRange(QPair<double,double> cutoffRange)
+QDoubleSlider::setCutoffRange(QPair<double, double> cutoffRange)
 {
   clamp(cutoffRange, numericalLimits());
-  QPair<double,double> oRange = range();
+  QPair<double, double> oRange = range();
 
   cutoffRange_ = cutoffRange;
 
@@ -93,36 +95,41 @@ double
 QDoubleSlider::convertFromRangeSlider(int value) const
 {
 
-  QPair<int,int> sliderMaxRange = slider_->cutoffRange();
+  QPair<int, int> sliderMaxRange = slider_->cutoffRange();
 
-  double retVal=(value-sliderMaxRange.first)/double(sliderMaxRange.second-sliderMaxRange.first);
+  double retVal=(value-sliderMaxRange.first) /
+    double(sliderMaxRange.second-sliderMaxRange.first);
 
-  return retVal*(cutoffRange_.second-cutoffRange_.first)+cutoffRange_.first;
+  return retVal * (cutoffRange_.second - cutoffRange_.first) +
+    cutoffRange_.first;
 }
 
-QPair<double,double>
-QDoubleSlider::convertFromRangeSlider(QPair<int,int> value) const
+QPair<double, double>
+QDoubleSlider::convertFromRangeSlider(QPair<int, int> value) const
 {
 
-  return QPair<double,double>(convertFromRangeSlider(value.first),convertFromRangeSlider(value.second));
+  return QPair<double, double>(convertFromRangeSlider(value.first),
+                              convertFromRangeSlider(value.second));
 }
 
 int
 QDoubleSlider::convertToRangeSlider(double value) const
 {
 
-  double retVal=(value-cutoffRange_.first)/(cutoffRange_.second-cutoffRange_.first);
+  double retVal = (value-cutoffRange_.first)/
+    (cutoffRange_.second-cutoffRange_.first);
 
-  QPair<int,int> sliderMaxRange = slider_->cutoffRange();
+  QPair<int, int> sliderMaxRange = slider_->cutoffRange();
 
-  return int(retVal*(sliderMaxRange.second-sliderMaxRange.first)+sliderMaxRange.first);
+  return int(retVal * (sliderMaxRange.second - sliderMaxRange.first) +
+             sliderMaxRange.first);
 }
 
 
 void
-QDoubleSlider::rangeChanged(QPair<int,int> value)
+QDoubleSlider::rangeChanged(QPair<int, int> value)
 {
-  QPair<double,double> range = convertFromRangeSlider(value);
+  QPair<double, double> range = convertFromRangeSlider(value);
 
   if (!cmp(value,expectValue_,1)) {
     range_ = range;
@@ -130,16 +137,16 @@ QDoubleSlider::rangeChanged(QPair<int,int> value)
   }
 }
 
-QPair<int,int>
-QDoubleSlider::convertToRangeSlider(QPair<double,double> value) const
+QPair<int, int>
+QDoubleSlider::convertToRangeSlider(QPair<double, double> value) const
 {
 
-  return QPair<int,int>(convertToRangeSlider(value.first),
+  return QPair<int, int>(convertToRangeSlider(value.first),
                         convertToRangeSlider(value.second));
 }
 
-bool QDoubleSlider::clamp(QPair<double,double> & value,
-                          const QPair<double,double> & limits)
+bool QDoubleSlider::clamp(QPair<double, double>& value,
+                          const QPair<double, double>& limits)
 {
   bool changed = false;
   changed |= clamp(value.first, limits);
@@ -147,7 +154,7 @@ bool QDoubleSlider::clamp(QPair<double,double> & value,
   return changed;
 }
 
-bool QDoubleSlider::clamp(double & value, const QPair<double,double> & limits)
+bool QDoubleSlider::clamp(double& value, const QPair<double, double>& limits)
 {
   assert(limits.first <= limits.second);
   if (value < limits.first) {

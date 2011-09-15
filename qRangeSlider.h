@@ -61,7 +61,9 @@ class Q_GUI_EXPORT QRangeSlider : public QWidget
       //    Q_ENUMS(TickPosition)
       Q_PROPERTY(range_t range READ range WRITE setRange )
       Q_PROPERTY(range_t cutoffRange READ cutoffRange WRITE setCutoffRange )
-      Q_PROPERTY(QSlider::TickPosition tickPosition READ tickPosition WRITE setTickPosition)
+      Q_PROPERTY(QSlider::TickPosition tickPosition
+                 READ tickPosition
+                 WRITE setTickPosition)
     Q_PROPERTY(int tickInterval READ tickInterval WRITE setTickInterval)
 
 public:
@@ -75,8 +77,8 @@ public:
 
     };
 
-    explicit QRangeSlider(QWidget *parent = 0);
-    explicit QRangeSlider(Qt::Orientation orientation, QWidget *parent = 0);
+    explicit QRangeSlider(QWidget* parent = 0);
+    explicit QRangeSlider(Qt::Orientation orientation, QWidget* parent = 0);
 
     ~QRangeSlider();
 
@@ -89,32 +91,32 @@ public:
     void setTickInterval(int ti);
     int tickInterval() const;
 
-    bool event(QEvent *event);
+    bool event(QEvent* event);
 
-    const range_t & range() {
+    const range_t& range() {
       return range_;
     }
 
-    const range_t & cutoffRange() {
+    const range_t& cutoffRange() {
       return cutoffRange_;
     }
 
  signals:
-    void rangeChanged(QPair<int,int> range);
-    void cutoffRangeChanged(QPair<int,int> range);
+    void rangeChanged(QPair<int, int> range);
+    void cutoffRangeChanged(QPair<int, int> range);
 
  public slots:
-    void setRange(const QPair<int,int> & value);
-    void setCutoffRange(const QPair<int,int> & value);
+    void setRange(const QPair<int, int>& value);
+    void setCutoffRange(const QPair<int, int>& value);
 
  protected:
     void init();
 
-    void paintEvent(QPaintEvent *ev);
-    void mousePressEvent(QMouseEvent *ev);
-    void mouseReleaseEvent(QMouseEvent *ev);
-    void mouseMoveEvent(QMouseEvent *ev);
-    void initStyleOption(QStyleOptionSlider *option) const;
+    void paintEvent(QPaintEvent* ev);
+    void mousePressEvent(QMouseEvent* ev);
+    void mouseReleaseEvent(QMouseEvent* ev);
+    void mouseMoveEvent(QMouseEvent* ev);
+    void initStyleOption(QStyleOptionSlider* option) const;
     QRect getBBox() const;
 
  public:
@@ -126,14 +128,14 @@ public:
     range_t range_;
     range_t cutoffRange_;
 
-    enum ELEMENT { NONE=0x0, FIRST=0x1, SECOND=0x2};
+    enum ELEMENT { NONE = 0x0, FIRST = 0x1, SECOND = 0x2};
 
     ELEMENT tracking;
     QSlider::TickPosition tickPosition_;
     Qt::Orientation orientation_;
 
-    static void clamp(int & value, const range_t & clamp_to);
-    static void clamp(range_t & value, const range_t & clamp_to);
+    static void clamp(int& value, const range_t& clamp_to);
+    static void clamp(range_t& value, const range_t& clamp_to);
 };
 
 //QT_END_NAMESPACE

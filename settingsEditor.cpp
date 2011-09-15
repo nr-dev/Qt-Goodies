@@ -16,24 +16,27 @@ tabs(int numTabs) {
   return retVal;
 }
 
-void showElements(QSettings & settings, int level, QTextStream & out)
+void showElements(QSettings& settings, int level, QTextStream& out)
 {
   QStringList keys=settings.childKeys();
   foreach(QString key, keys) {
     QVariant value=settings.value(key);
-    QString rep=value.canConvert(QVariant::String)?value.toString():"<Cannot display>";
-    out<<tabs(level+1)+key<<"="<<'"'<<rep<<'"'<<"\n";
+    QString rep =
+      value.canConvert(QVariant::String) ?
+      value.toString() :
+      "<Cannot display>";
+    out << tabs(level + 1) + key << "=" << '"' << rep << '"' << "\n";
   }
 }
 
-QSettings * loadSettings(QStringList & args) {
+QSettings* loadSettings(QStringList& args) {
   QString filename;
 
-  QSettings * settings = 0;
+  QSettings* settings = 0;
 
-  for (int i=0;i<args.length();++i) {
-    if (args[i]=="-f") {
-      filename=args.takeAt(i+1);
+  for (int i = 0; i < args.length(); ++i) {
+    if (args[i] == "-f") {
+      filename = args.takeAt(i + 1);
       args.takeAt(i);
     }
   }
@@ -46,19 +49,19 @@ QSettings * loadSettings(QStringList & args) {
 }
 
 void
-show(QSettings & settings, const QString & path, int level, QTextStream & out)
+show(QSettings& settings, const QString& path, int level, QTextStream& out)
 {
   settings.beginGroup(path);
-  out<<tabs(level)+path<<"\n";
-  showElements(settings,level,out);
+  out << tabs(level) + path << "\n";
+  showElements(settings, level, out);
   QStringList children=settings.childGroups();
-  foreach(QString child, children) {
-    show(settings, child, level+1, out);
+  foreach(QString child,  children) {
+    show(settings, child, level + 1, out);
   }
   settings.endGroup();
 }
 
- int main(int argc, char *argv[])
+ int main(int argc, char* argv[])
  {
      QApplication app(argc, argv);
      app.setOrganizationName("Numerical Rocks");
@@ -66,7 +69,8 @@ show(QSettings & settings, const QString & path, int level, QTextStream & out)
 
      if (argc<3) {
        QMessageBox msgBox;
-       QString errorText=QString("Usage is:\n\t%1 <Company> <Application>").arg(argv[0]);
+       QString errorText =
+         QString("Usage is:\n\t%1 <Company> <Application>").arg(argv[0]);
        qDebug()<<errorText;
        msgBox.setText(errorText);
        msgBox.exec();
@@ -74,14 +78,14 @@ show(QSettings & settings, const QString & path, int level, QTextStream & out)
      }
 
      QStringList args;
-     for (int i=0;i<argc;++i) {
-       args<<argv[i];
+     for (int i = 0; i < argc; ++i) {
+       args << argv[i];
      }
 
-     QSettings * settings = loadSettings(args);
+     QSettings* settings = loadSettings(args);
 
      if(!settings) {
-       std::cerr<<"Unable to load settings";
+       std::cerr << "Unable to load settings";
        return 1;
      }
 
@@ -89,42 +93,43 @@ show(QSettings & settings, const QString & path, int level, QTextStream & out)
      QString key;
      QString value;
 ;
-     if (args.size()>2) {
-       key=args[2];
+     if (args.size() > 2) {
+       key = args[2];
      }
-     if (args.size()>3) {
-       value=args[3];
+     if (args.size() > 3) {
+       value = args[3];
      }
-
 
      QTextStream out(stdout);
 
-     if(command=="show") {
+     if(command == "show") {
        if (key.isEmpty()) {
-         show(*settings,"", 0, out);
+         show(*settings, "", 0, out);
          out.flush();
        }
        else {
-         QString value=settings->value(key).toString();
-         out<<key<<"=\""<<value<<"\"\n";
+         QString value = settings->value(key).toString();
+         out << key << "=\"" << value << "\"\n";
          out.flush();
        }
      }
-     else if(command=="set") {
+     else if(command == "set") {
        QVariant oldValue = settings->value(key);
        if(!oldValue.isNull() && !oldValue.canConvert(QVariant::String)) {
-         std::cerr<<"You are trying to set a non-representable value with a string. This is not supported";
+         std::cerr <<
+           "You are trying to set a non-representable value with a string."
+           "This is not supported";
          exit(1);
        }
 
        settings->setValue(key, value);
      }
      else {
-       out<<QString("Invalid command %1\n").arg(command);
+       out << QString("Invalid command %1\n").arg(command);
        out.flush();
      }
 
-     if(settings!=0)
+     if(settings != 0)
        delete settings;
      exit(0);
  }
