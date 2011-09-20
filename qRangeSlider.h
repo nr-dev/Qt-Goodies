@@ -120,9 +120,6 @@ public:
     QRect getBBox() const;
 
  public:
-    //private:
-    friend Q_GUI_EXPORT QStyleOptionSlider qt_qsliderStyleOption(QRangeSlider *slider);
-
     Q_DISABLE_COPY(QRangeSlider)
 
     range_t range_;

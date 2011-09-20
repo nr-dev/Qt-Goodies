@@ -762,16 +762,6 @@ int QRangeSlider::tickInterval() const
   Use setValue() instead.
 */
 
-/*! \internal
-  Returns the style option for slider.
-*/
-Q_GUI_EXPORT QStyleOptionSlider qt_qsliderStyleOption(QRangeSlider* slider)
-{
-  QStyleOptionSlider sliderOption;
-  slider->initStyleOption(&sliderOption);
-  return sliderOption;
-}
-
 #endif
 
 QT_END_NAMESPACE
