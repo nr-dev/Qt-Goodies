@@ -52,7 +52,7 @@ QT_MODULE(Gui)
 
 class QRangeSliderPrivate;
 class QStyleOptionSlider;
-class Q_GUI_EXPORT QRangeSlider : public QWidget
+class QRangeSlider : public QWidget
 {
     Q_OBJECT
 
