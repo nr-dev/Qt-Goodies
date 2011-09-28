@@ -1,6 +1,6 @@
 #include <QtGui/QApplication>
 #include <QtGui/QMainWindow>
-#include "qDoubleSlider.h"
+#include "qDoubleRangeSlider.h"
 #include <QtGui/QSlider>
 #include <QtGui/QMotifStyle>
 #include <QtGui/QCleanlooksStyle>
@@ -27,8 +27,8 @@ int main(int argc, char* argv[])
   QLayout* layout = new QHBoxLayout(w);
   w->setLayout(layout);
 
-  QDoubleSlider* slider;
-  slider = new QDoubleSlider(Qt::Horizontal, w);
+  QDoubleRangeSlider* slider;
+  slider = new QDoubleRangeSlider(Qt::Horizontal, w);
   slider->setSizePolicy(QSizePolicy(QSizePolicy::Expanding,
                                     QSizePolicy::Expanding));
   layout->addWidget(slider);

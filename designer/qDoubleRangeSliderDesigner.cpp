@@ -1,6 +1,6 @@
-#include "qDoubleSliderDesigner.h"
+#include "qDoubleRangeSliderDesigner.h"
 
-#include "../qDoubleSlider.h"
+#include "../qDoubleRangeSlider.h"
 
 #include <QtCore/QtPlugin>
 #ifndef QTGOODIES_INCLUDE_PREFIX
@@ -29,7 +29,7 @@ bool QDoubleSliderDesigner::isInitialized() const
 
 QWidget *QDoubleSliderDesigner::createWidget(QWidget *parent)
 {
-  return new QDoubleSlider(parent);
+  return new QDoubleRangeSlider(parent);
 }
 
 QString QDoubleSliderDesigner::name() const
@@ -72,7 +72,7 @@ QString QDoubleSliderDesigner::domXml() const
 
 QString QDoubleSliderDesigner::includeFile() const
 {
-  return QTGOODIES_INCLUDE_PREFIX  "qDoubleSlider.h";
+  return QTGOODIES_INCLUDE_PREFIX  "qDoubleRangeSlider.h";
 }
 
 Q_EXPORT_PLUGIN2(QDoubleSliderDesigner, QDoubleSliderDesigner)

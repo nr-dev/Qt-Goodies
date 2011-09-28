@@ -1,4 +1,4 @@
-#include "qDoubleSlider.h"
+#include "qDoubleRangeSlider.h"
 #include <QtCore/QSettings>
 #include <QtGui/QApplication>
 #include <QtGui/QMainWindow>

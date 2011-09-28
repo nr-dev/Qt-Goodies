@@ -1,17 +1,18 @@
-#include "qDoubleSlider.h"
+#include "qDoubleRangeSlider.h"
 
 #include <QtGui/QHBoxLayout>
 #include <cassert>
 
 
-QDoubleSlider::QDoubleSlider(QWidget* parent)
+QDoubleRangeSlider::QDoubleRangeSlider(QWidget* parent)
   : QWidget(parent),
     slider_(new QRangeSlider(this))
 {
   setup();
 }
 
-QDoubleSlider::QDoubleSlider(Qt::Orientation orientation, QWidget* parent)
+QDoubleRangeSlider::QDoubleRangeSlider(Qt::Orientation orientation,
+                                       QWidget* parent)
   : QWidget(parent),
     slider_(new QRangeSlider(orientation, this))
 {
@@ -19,7 +20,7 @@ QDoubleSlider::QDoubleSlider(Qt::Orientation orientation, QWidget* parent)
 }
 
 void
-QDoubleSlider::setup()
+QDoubleRangeSlider::setup()
 {
   QLayout* layout=new QHBoxLayout(this);
   setLayout(layout);
@@ -36,14 +37,14 @@ QDoubleSlider::setup()
 }
 
 bool
-QDoubleSlider::cmp(int a, int b, uint offset)
+QDoubleRangeSlider::cmp(int a, int b, uint offset)
 {
   return ((a+int(offset))>=b)
     && ((a-int(offset))<=b);
 }
 
 bool
-QDoubleSlider::cmp(const QPair<int, int>& a,
+QDoubleRangeSlider::cmp(const QPair<int, int>& a,
                    const QPair<int, int>& b,
                    uint offset) {
   return cmp(a.first, b.first, offset)&&
@@ -51,7 +52,7 @@ QDoubleSlider::cmp(const QPair<int, int>& a,
 }
 
 void
-QDoubleSlider::setRange(QPair<double, double> range)
+QDoubleRangeSlider::setRange(QPair<double, double> range)
 {
   clamp(range,cutoffRange());
   range_ = range;
@@ -68,7 +69,7 @@ QDoubleSlider::setRange(QPair<double, double> range)
 }
 
 void
-QDoubleSlider::setCutoffRange(QPair<double, double> cutoffRange)
+QDoubleRangeSlider::setCutoffRange(QPair<double, double> cutoffRange)
 {
   clamp(cutoffRange, numericalLimits());
   QPair<double, double> oRange = range();
@@ -79,20 +80,20 @@ QDoubleSlider::setCutoffRange(QPair<double, double> cutoffRange)
   emit cutoffRangeChanged(cutoffRange_);
 }
 
-QDoubleSlider::range_t
-QDoubleSlider::range() const
+QDoubleRangeSlider::range_t
+QDoubleRangeSlider::range() const
 {
   return range_;
 }
 
-QDoubleSlider::range_t
-QDoubleSlider::cutoffRange() const
+QDoubleRangeSlider::range_t
+QDoubleRangeSlider::cutoffRange() const
 {
   return cutoffRange_;
 }
 
 double
-QDoubleSlider::convertFromRangeSlider(int value) const
+QDoubleRangeSlider::convertFromRangeSlider(int value) const
 {
 
   QPair<int, int> sliderMaxRange = slider_->cutoffRange();
@@ -105,7 +106,7 @@ QDoubleSlider::convertFromRangeSlider(int value) const
 }
 
 QPair<double, double>
-QDoubleSlider::convertFromRangeSlider(QPair<int, int> value) const
+QDoubleRangeSlider::convertFromRangeSlider(QPair<int, int> value) const
 {
 
   return QPair<double, double>(convertFromRangeSlider(value.first),
@@ -113,7 +114,7 @@ QDoubleSlider::convertFromRangeSlider(QPair<int, int> value) const
 }
 
 int
-QDoubleSlider::convertToRangeSlider(double value) const
+QDoubleRangeSlider::convertToRangeSlider(double value) const
 {
 
   double retVal = (value-cutoffRange_.first)/
@@ -127,7 +128,7 @@ QDoubleSlider::convertToRangeSlider(double value) const
 
 
 void
-QDoubleSlider::rangeChanged(QPair<int, int> value)
+QDoubleRangeSlider::rangeChanged(QPair<int, int> value)
 {
   QPair<double, double> range = convertFromRangeSlider(value);
 
@@ -138,14 +139,14 @@ QDoubleSlider::rangeChanged(QPair<int, int> value)
 }
 
 QPair<int, int>
-QDoubleSlider::convertToRangeSlider(QPair<double, double> value) const
+QDoubleRangeSlider::convertToRangeSlider(QPair<double, double> value) const
 {
 
   return QPair<int, int>(convertToRangeSlider(value.first),
                         convertToRangeSlider(value.second));
 }
 
-bool QDoubleSlider::clamp(QPair<double, double>& value,
+bool QDoubleRangeSlider::clamp(QPair<double, double>& value,
                           const QPair<double, double>& limits)
 {
   bool changed = false;
@@ -154,7 +155,8 @@ bool QDoubleSlider::clamp(QPair<double, double>& value,
   return changed;
 }
 
-bool QDoubleSlider::clamp(double& value, const QPair<double, double>& limits)
+bool QDoubleRangeSlider::clamp(double& value,
+                               const QPair<double, double>& limits)
 {
   assert(limits.first <= limits.second);
   if (value < limits.first) {

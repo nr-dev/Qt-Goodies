@@ -4,7 +4,7 @@
 #include "qRangeSlider.h"
 #include <limits>
 
-class QDoubleSlider : public QWidget
+class QDoubleRangeSlider : public QWidget
 {
   Q_OBJECT
     public:
@@ -27,8 +27,9 @@ class QDoubleSlider : public QWidget
              WRITE setCutoffRange
              NOTIFY maxRangeChanged)
 
-  explicit QDoubleSlider(QWidget* parent = 0);
-  explicit QDoubleSlider(Qt::Orientation orientation, QWidget* parent = 0);
+  explicit QDoubleRangeSlider(QWidget* parent = 0);
+  explicit QDoubleRangeSlider(Qt::Orientation orientation,
+                              QWidget* parent = 0);
 
   range_t range() const;
   range_t cutoffRange() const;

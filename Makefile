@@ -12,13 +12,13 @@ m%.cpp: %.h
 
 all: test SettingsEditor designer
 
-test: test.o qDoubleSlider.o mqDoubleSlider.o qRangeSlider.o mqRangeSlider.o
+test: test.o qDoubleRangeSlider.o mqDoubleRangeSlider.o qRangeSlider.o mqRangeSlider.o
 	$(LD) $(LDFLAGS) -o $@ $^
 
 SettingsEditor: settingsEditor.o
 	$(LD) $(LDFLAGS) -o $@ $^
 
-designer: qDoubleSlider.o mqDoubleSlider.o qRangeSlider.o mqRangeSlider.o
+designer: qDoubleRangeSlider.o mqDoubleRangeSlider.o qRangeSlider.o mqRangeSlider.o
 	cd designer; $(MAKE) 
 
 clean:

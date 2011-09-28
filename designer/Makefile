@@ -15,7 +15,7 @@ all: libQRangeSliderDesigner.so libQDoubleSliderDesigner.so
 libQRangeSliderDesigner.so: ../qRangeSlider.o ../mqRangeSlider.o qRangeSliderDesigner.o mqRangeSliderDesigner.o
 	$(LD) -shared $(LDFLAGS) -o $@ $^
 
-libQDoubleSliderDesigner.so: ../qDoubleSlider.o ../mqDoubleSlider.o ../qRangeSlider.o ../mqRangeSlider.o qDoubleSliderDesigner.o mqDoubleSliderDesigner.o
+libQDoubleSliderDesigner.so: ../qDoubleRangeSlider.o ../mqDoubleRangeSlider.o ../qRangeSlider.o ../mqRangeSlider.o qDoubleRangeSliderDesigner.o mqDoubleRangeSliderDesigner.o
 	$(LD) -shared $(LDFLAGS) -o $@ $^
 
 clean:
