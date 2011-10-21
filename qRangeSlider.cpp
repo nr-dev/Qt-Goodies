@@ -45,13 +45,15 @@
 #ifndef QT_NO_ACCESSIBILITY
 #include <QtGui/QAccessible>
 #endif
-#include <QtGui/QApplication>
+#include <cassert>
+
+#include <QtCore/QDebug>
+#include <QtCore/QDebug>
 #include <QtCore/QEvent>
+#include <QtGui/QApplication>
 #include <QtGui/QPainter>
 #include <QtGui/QStyle>
 #include <QtGui/QStyleOption>
-#include <QtCore/QDebug>
-#include <cassert>
 
 
 QT_BEGIN_NAMESPACE
@@ -205,7 +207,6 @@ void QRangeSlider::init()
 QRangeSlider::~QRangeSlider()
 {
 }
-#include <iostream>
 
 namespace SliderProperties {
   static const float factor = 0.5;
@@ -249,7 +250,8 @@ namespace SliderProperties {
   }
 
   void ppoint(const QPoint& p) {
-    std::cout << "(" << p.x() << "," << p.y() << ")";
+    qDebug()<<p;
+    //std::cout << "(" << p.x() << "," << p.y() << ")";
   }
 
 
@@ -546,22 +548,21 @@ void QRangeSlider::mousePressEvent(QMouseEvent* ev)
     tracking = elem;
   }
 
-  std::cout << "Tracking ";
+  qDebug() << "Tracking ";
 
   switch(tracking) {
   case QRangeSlider::NONE:
-    std::cout << "NONE";
+    qDebug() << "NONE";
     break;
   case QRangeSlider::FIRST:
-    std::cout << "FIRST";
+    qDebug() << "FIRST";
     break;
   case QRangeSlider::SECOND:
-    std::cout << "SECOND";
+    qDebug() << "SECOND";
     break;
   default:
     abort();
   }
-  std::cout << std::endl;
 }
 
 /*!
