@@ -1,7 +1,7 @@
 include Makefile.inc
 
 CXXINCLUDES:= $(CXXINCLUDES)
-CXXFLAGS:= $(CXXINCLUDES) $(CXXFLAGS) -fPIC
+CXXFLAGS:= $(CXXINCLUDES) $(CXXFLAGS) -fPIC -g2
 LDFLAGS:= $(LDFLAGS) -lQtGui
 LD:=g++
 
@@ -19,10 +19,10 @@ SettingsEditor: settingsEditor.o
 	$(LD) $(LDFLAGS) -o $@ $^
 
 designer: qDoubleRangeSlider.o mqDoubleRangeSlider.o qRangeSlider.o mqRangeSlider.o
-	cd designer; $(MAKE) 
+	cd designer; $(MAKE)
 
 clean:
-	rm -f *.o
+	rm -f *.o mq*.cpp *~
 	cd designer; $(MAKE) clean
 
 distclean: clean
