@@ -58,6 +58,212 @@
 
 QT_BEGIN_NAMESPACE
 
+QStyleRangeSlider* QRangeSlider::styleRangeSlider_ = 0;
+
+class QStyleRangeSlider : public QStyle {
+public:
+  static const float factor = 0.5;
+  static const int grooveMarginX = 20;
+
+  static const QStyle::PixelMetric PM_RangeSliderLength =
+    QStyle::PixelMetric(QStyle::PM_CustomBase + 1);
+
+  void drawPrimitive(QStyle::PrimitiveElement element,
+                     const QStyleOption* option,
+                     QPainter* painter,
+                     const QWidget* widget) const
+  {
+    realStyle_->drawPrimitive(element, option, painter, widget);
+  }
+  void drawControl(QStyle::ControlElement element,
+                   const QStyleOption* option,
+                   QPainter* painter,
+                   const QWidget* widget) const
+  {
+    realStyle_->drawControl(element, option, painter, widget);
+  }
+  QRect subElementRect(QStyle::SubElement element,
+                       const QStyleOption* option,
+                       const QWidget* widget) const
+  {
+    realStyle_->subElementRect(element, option, widget);
+  }
+
+  void drawComplexControl(QStyle::ComplexControl control,
+                          const QStyleOptionComplex* option,
+                          QPainter* painter,
+                          const QWidget* widget) const
+  {
+    if (control == QStyle::CC_CustomBase) {
+      QRect bbox = static_cast<const QRangeSlider*>(widget)->getBBox();
+      const QRangeSlider* rSlider = static_cast<const QRangeSlider*>(widget);
+      paintGroove(*painter, bbox);
+      paintFilling(*painter, bbox, rSlider->range(), rSlider->cutoffRange());
+      paintTicks(*painter, bbox);
+      paintMarker(*painter, bbox, rSlider->range(), rSlider->cutoffRange(), FIRST);
+      paintMarker(*painter, bbox, rSlider->range(), rSlider->cutoffRange(), SECOND);
+      return;
+    }
+
+    return realStyle_->drawComplexControl(control, option, painter, widget);
+  }
+
+  QStyle::SubControl hitTestComplexControl(QStyle::ComplexControl control,
+                                           const QStyleOptionComplex* option,
+                                           const QPoint& position,
+                                           const QWidget* widget) const
+  {
+    if (control == QStyle::CC_CustomBase) {
+      QRect bbox = static_cast<const QRangeSlider*>(widget)->getBBox();
+      const QRangeSlider* rSlider = static_cast<const QRangeSlider*>(widget);
+      QPolygon p = getMarkerArea(bbox, rSlider->range(),
+                                 rSlider->cutoffRange(), FIRST);
+      if (p.containsPoint(position, Qt::OddEvenFill))
+        return QStyle::SC_SliderHandle;
+      p = getMarkerArea(bbox, rSlider->range(),
+                        rSlider->cutoffRange(), SECOND);
+      if (p.containsPoint(position, Qt::OddEvenFill))
+        return SC_SliderHandle2;
+      return QStyle::SC_None;
+    }
+
+    return realStyle_->hitTestComplexControl(control,
+                                             option,
+                                             position,
+                                             widget);
+  }
+
+  int pixelMetric(QStyle::PixelMetric metric,
+                  const QStyleOption* option,
+                  const QWidget* widget) const
+  {
+    switch(metric) {
+    default:
+      return realStyle_->pixelMetric(metric, option, widget);
+    }
+  }
+
+  QRect subControlRect(QStyle::ComplexControl control,
+                       const QStyleOptionComplex* option,
+                       QStyle::SubControl subControl,
+                       const QWidget* widget) const
+  {
+    return realStyle_->subControlRect(control, option, subControl, widget);
+  }
+
+  QSize sizeFromContents(QStyle::ContentsType type,
+                         const QStyleOption* option,
+                         const QSize& contentsSize,
+                         const QWidget* widget) const
+  {
+    realStyle_->sizeFromContents(type, option, contentsSize, widget);
+  }
+
+  int styleHint(QStyle::StyleHint hint,
+                const QStyleOption* option,
+                const QWidget* widget,
+                QStyleHintReturn* returnData) const
+  {
+    realStyle_->styleHint(hint, option, widget, returnData);
+  }
+
+  QPixmap standardPixmap(QStyle::StandardPixmap standardPixmap,
+                         const QStyleOption* option,
+                         const QWidget* widget) const
+  {
+    realStyle_->standardPixmap(standardPixmap, option, widget);
+  }
+
+  QPixmap generatedIconPixmap(QIcon::Mode iconMode,
+                              const QPixmap& pixmap,
+                              const QStyleOption* option) const
+  {
+    realStyle_->generatedIconPixmap(iconMode, pixmap, option);
+  }
+
+
+  void setRealStyle(QStyle* realStyle)
+  {
+    realStyle_ = realStyle;
+  }
+  enum WHICH { NONE = 0,
+               FIRST = 0x1,
+               SECOND = 0x2,
+               BOTH = FIRST | SECOND };
+
+  const static QStyle::SubControl SC_SliderHandle2 =
+    QStyle::SubControl(0x00000008);
+
+  void paintGroove(QPainter& p, const QRect& bbox) const;
+  void paintFilling(QPainter& p, const QRect& bbox,
+                    const QPair<int, int>& range,
+                    const QPair<int, int>& cutoffRange) const;
+  void paintMarker(QPainter& p,
+                   const QRect& bbox,
+                   const QPair<int, int>& range,
+                   const QPair<int, int>& cutoffRange,
+                   WHICH which) const;
+
+
+  QPolygon getMarkerArea(const QRect& bbox,
+                         const QPair<int, int>& range,
+                         const QPair<int, int>& cutoffRange,
+                         WHICH which) const;
+  void paintTicks(QPainter& p, const QRect& bbox) const;
+
+  int getGrooveX(const QRect& bbox) const {
+    //    return int(bbox.x()+factor*.5*bbox.width());
+    return int(bbox.x() + grooveMarginX);
+  }
+  int getGrooveY(const QRect& bbox) const {
+    return int(bbox.y() + factor * .5 * bbox.height());
+  }
+  int getGrooveWidth(const QRect& bbox) const {
+    //    return int((1.0-factor)*bbox.width());
+    return int(bbox.width() - grooveMarginX * 2);
+  }
+  int getGrooveHeight(const QRect& bbox) const {
+    return int((1.0 - factor) * bbox.height());
+  }
+  int getPosMin(const QRect& bbox, int min,
+                const QPair<int, int>& cutoffRange) const {
+    return int(getGrooveX(bbox) + getGrooveWidth(bbox) *
+               (min - cutoffRange.first)/
+               (1.0 * (cutoffRange.second - cutoffRange.first)));
+  }
+  int getPosMax(const QRect& bbox,
+                int max,
+                const QPair<int, int>& cutoffRange) const {
+    return getPosMin(bbox, max, cutoffRange);
+    //return int(getGrooveX(bbox)+0.01*max*getGrooveWidth(bbox));
+  }
+
+  void ppoint(const QPoint& p) {
+    qDebug()<<p;
+    //std::cout << "(" << p.x() << "," << p.y() << ")";
+  }
+
+
+  QRangeSlider::ELEMENT getElement(const QRect& bbox,
+                                   const QPair<int, int>& range,
+                                   const QPair<int, int>& cutoffRange,
+                                   const QPoint& pos)
+  {
+    QPolygon p = getMarkerArea(bbox, range, cutoffRange, FIRST);
+    if (p.containsPoint(pos, Qt::OddEvenFill))
+      return QRangeSlider::FIRST;
+    p = getMarkerArea(bbox, range, cutoffRange, SECOND);
+    if (p.containsPoint(pos, Qt::OddEvenFill))
+      return QRangeSlider::SECOND;
+
+    return QRangeSlider::NONE;
+  }
+
+private:
+  QStyle* realStyle_;
+};
+
+
 /*!
   Initialize \a option with the values from this QRangeSlider. This
   method is useful for subclasses when they need a
@@ -66,16 +272,19 @@ QT_BEGIN_NAMESPACE
 
   \sa QStyleOption::initFrom()
 */
-void QRangeSlider::initStyleOption(QStyleOptionSlider* option) const
+void QRangeSlider::initStyleOption(QStyleOptionRangeSlider* option)
 {
 
   if (!option)
     return;
 
+  //styleOptionRangeSlider_ = QSharedPointer<QStyleOptionRangeSlider>(option);
   //    Q_D(const QRangeSlider);
+  /*
   option->initFrom(this);
-  option->subControls = QStyle::SC_None;
+  //option->subControls = QStyle::SC_None;
   option->activeSubControls = QStyle::SC_None;
+  */
 }
 
 
@@ -177,7 +386,7 @@ void QRangeSlider::initStyleOption(QStyleOptionSlider* option) const
 QRangeSlider::QRangeSlider(QWidget* parent)
   : QWidget(parent)
 {
-  init();
+  init(Qt::Vertical);
 }
 
 /*!
@@ -187,18 +396,18 @@ QRangeSlider::QRangeSlider(QWidget* parent)
 */
 
 QRangeSlider::QRangeSlider(Qt::Orientation orientation, QWidget* parent)
-  : QWidget(parent),
-    orientation_(orientation)
+  : QWidget(parent)
 {
-  init();
+  init(orientation);
 }
 
-void QRangeSlider::init()
+void QRangeSlider::init(Qt::Orientation orientation)
 {
+  styleOptionRangeSlider_.setOrientation(orientation);
   setSizePolicy(QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed));
-  cutoffRange_ = range_t(0, 100);
-  range_ = range_t(40, 60);
-  tracking = NONE;
+  styleOptionRangeSlider_.setCutoffRange(range_t(0, 100));
+  styleOptionRangeSlider_.setRange(range_t(40, 60));
+  tracking = QStyle::SC_None;
 }
 
 /*!
@@ -208,76 +417,13 @@ QRangeSlider::~QRangeSlider()
 {
 }
 
-namespace SliderProperties {
-  static const float factor = 0.5;
-  static const int grooveMarginX = 20;
-
-  enum WHICH { NONE = 0,
-               FIRST = 0x1,
-               SECOND = 0x2,
-               BOTH = FIRST | SECOND };
-
-  QPolygon getMarkerArea(const QRect& bbox,
-                         const QPair<int, int>& range,
-                         const QPair<int, int>& cutoffRange,
-                         WHICH which);
-
-  int getGrooveX(const QRect& bbox) {
-    //    return int(bbox.x()+factor*.5*bbox.width());
-    return int(bbox.x() + grooveMarginX);
-  }
-  int getGrooveY(const QRect& bbox) {
-    return int(bbox.y() + factor * .5 * bbox.height());
-  }
-  int getGrooveWidth(const QRect& bbox) {
-    //    return int((1.0-factor)*bbox.width());
-    return int(bbox.width() - grooveMarginX * 2);
-  }
-  int getGrooveHeight(const QRect& bbox) {
-    return int((1.0 - factor) * bbox.height());
-  }
-  int getPosMin(const QRect& bbox, int min,
-                const QPair<int, int>& cutoffRange) {
-    return int(getGrooveX(bbox) + getGrooveWidth(bbox) *
-               (min - cutoffRange.first)/
-               (1.0 * (cutoffRange.second - cutoffRange.first)));
-  }
-  int getPosMax(const QRect& bbox,
-                int max,
-                const QPair<int, int>& cutoffRange) {
-    return getPosMin(bbox, max, cutoffRange);
-    //return int(getGrooveX(bbox)+0.01*max*getGrooveWidth(bbox));
-  }
-
-  void ppoint(const QPoint& p) {
-    qDebug()<<p;
-    //std::cout << "(" << p.x() << "," << p.y() << ")";
-  }
-
-
-  QRangeSlider::ELEMENT getElement(const QRect& bbox,
-                                   const QPair<int, int>& range,
-                                   const QPair<int, int>& cutoffRange,
-                                   const QPoint& pos)
-  {
-    QPolygon p = getMarkerArea(bbox, range, cutoffRange, FIRST);
-    if (p.containsPoint(pos, Qt::OddEvenFill))
-      return QRangeSlider::FIRST;
-    p = getMarkerArea(bbox, range, cutoffRange, SECOND);
-    if (p.containsPoint(pos, Qt::OddEvenFill))
-      return QRangeSlider::SECOND;
-
-    return QRangeSlider::NONE;
-  }
-
-  QPolygon getMarkerArea(const QRect& bbox,
-                         const QPair<int, int>& range,
-                         const QPair<int, int>& cutoffRange,
-                         WHICH which)
-  {
-    QPolygon paintArea;
-
-    int width = 10;
+QPolygon QStyleRangeSlider::getMarkerArea(const QRect& bbox,
+                                          const QPair<int, int>& range,
+                                          const QPair<int, int>& cutoffRange,
+                                          QStyleRangeSlider::WHICH which) const
+{
+  QPolygon paintArea;
+  int width = 10;
 
     int pos;
     if (which & FIRST) {
@@ -301,7 +447,6 @@ namespace SliderProperties {
 
     return paintArea;
   }
-}
 
 void cubic_average(QPolygonF& p, size_t j) {
   p[j] = (p[j-1] + 4 * p[j] + p[j+1]) * (1.0 / 6.0);
@@ -339,22 +484,22 @@ void cubic_subdivide(QPolygonF& p, size_t j, int recurse = 1)
 
 }
 
-void paintGroove(QPainter& p, const QRect& bbox)
+void QStyleRangeSlider::paintGroove(QPainter& p, const QRect& bbox) const
 {
   QRect paintBox;
 
-  paintBox.setX(SliderProperties::getGrooveX(bbox));
-  paintBox.setY(SliderProperties::getGrooveY(bbox));
-  paintBox.setWidth(SliderProperties::getGrooveWidth(bbox));
-  paintBox.setHeight(SliderProperties::getGrooveHeight(bbox));
+  paintBox.setX(getGrooveX(bbox));
+  paintBox.setY(getGrooveY(bbox));
+  paintBox.setWidth(getGrooveWidth(bbox));
+  paintBox.setHeight(getGrooveHeight(bbox));
 
 
   QPolygonF paintArea = QPolygon(paintBox, true);
 
   float offset = 0.025;
   float aspect =
-    SliderProperties::getGrooveWidth(bbox) * 1.0 /
-    SliderProperties::getGrooveHeight(bbox);
+    getGrooveWidth(bbox) * 1.0 /
+    getGrooveHeight(bbox);
 
   offset = 0.2;
   float offset2 = offset / aspect;
@@ -394,19 +539,21 @@ void paintGroove(QPainter& p, const QRect& bbox)
   p.restore();
 }
 
-void paintFilling(QPainter& p, const QRect& bbox,
-                  const QPair<int, int>& range,
-                  const QPair<int, int>& cutoffRange) {
+void
+QStyleRangeSlider::paintFilling(QPainter& p, const QRect& bbox,
+                                const QPair<int, int>& range,
+                                const QPair<int, int>& cutoffRange) const
+{
 
   QRect paintBox;
 
-  int x = SliderProperties::getPosMin(bbox, range.first, cutoffRange);
-  int width = SliderProperties::getPosMax(bbox, range.second, cutoffRange) - x;
+  int x = getPosMin(bbox, range.first, cutoffRange);
+  int width = getPosMax(bbox, range.second, cutoffRange) - x;
 
   paintBox.setX(x);
-  paintBox.setY(SliderProperties::getGrooveY(bbox));
+  paintBox.setY(getGrooveY(bbox));
   paintBox.setWidth(width);
-  paintBox.setHeight(SliderProperties::getGrooveHeight(bbox));
+  paintBox.setHeight(getGrooveHeight(bbox));
 
   QPolygon paintArea = QPolygon(paintBox, true);
 
@@ -433,39 +580,40 @@ void paintFilling(QPainter& p, const QRect& bbox,
 
 }
 
-void paintMarker(QPainter& p,
-                 const QRect& bbox,
-                 const QPair<int, int>& range,
-                 const QPair<int, int>& cutoffRange,
-                 SliderProperties::WHICH which) {
+void QStyleRangeSlider::paintMarker(QPainter& p,
+                                    const QRect& bbox,
+                                    const QPair<int, int>& range,
+                                    const QPair<int, int>& cutoffRange,
+                                    QStyleRangeSlider::WHICH which) const
+{
 
   QRect paintBox;
 
   p.setBrush(Qt::lightGray);
 
-  if (which & SliderProperties::FIRST) {
+  if (which & FIRST) {
     QPolygon poly =
-      SliderProperties::getMarkerArea(bbox, range, cutoffRange, which);
+      getMarkerArea(bbox, range, cutoffRange, which);
     p.drawPolygon(poly);
   }
-  if (which & SliderProperties::SECOND) {
+  if (which & SECOND) {
     QPolygon poly =
-      SliderProperties::getMarkerArea(bbox, range, cutoffRange, which);
+      getMarkerArea(bbox, range, cutoffRange, which);
     p.drawPolygon(poly);
   }
 }
 
-void paintTicks(QPainter& p, const QRect& bbox) {
-  int top = SliderProperties::getGrooveY(bbox) +
-    SliderProperties::getGrooveHeight(bbox);
+void QStyleRangeSlider::paintTicks(QPainter& p, const QRect& bbox) const
+{
+  int top = getGrooveY(bbox) + getGrooveHeight(bbox);
   int bottom = bbox.height();
   int height = bottom - top;
 
   bottom -= int(0.2 * height);
   top += int(0.2 * top);
 
-  int baseX = SliderProperties::getGrooveX(bbox);
-  int width = SliderProperties::getGrooveWidth(bbox);
+  int baseX = getGrooveX(bbox);
+  int width = getGrooveWidth(bbox);
 
   for (int i = 0; i < 100; i += 5) {
     int x = baseX + i * width / 100;
@@ -481,18 +629,13 @@ void QRangeSlider::paintEvent(QPaintEvent*)
 {
   //    Q_D(QRangeSlider);
   QPainter p(this);
-  QStyleOptionSlider opt;
+  //QStyleOptionSlider opt;
 
   QRect bbox = getBBox();
 
   qDebug() << bbox;
 
-
-  paintGroove(p, bbox);
-  paintFilling(p, bbox, range(), cutoffRange());
-  paintTicks(p,bbox);
-  paintMarker(p, bbox, range(), cutoffRange(), SliderProperties::FIRST);
-  paintMarker(p, bbox, range(), cutoffRange(), SliderProperties::SECOND);
+  styleRangeSlider()->drawComplexControl(QStyle::CC_CustomBase, &styleOptionRangeSlider_, &p,this);
 
 
 
@@ -538,12 +681,15 @@ QRect QRangeSlider::getBBox() const
 void QRangeSlider::mousePressEvent(QMouseEvent* ev)
 {
   //    Q_D(QRangeSlider);
-  ELEMENT elem = SliderProperties::getElement(getBBox(),
+  QStyle::SubControl elem = styleRangeSlider()->hitTestComplexControl(QStyle::CC_CustomBase, &styleOptionRangeSlider_, ev->pos(), this);
+  /*
+  ELEMENT elem = styleOptionRangeSlider_->getElement(getBBox(),
                                               range(),
                                               cutoffRange(),
                                               ev->pos());
+  */
 
-  if (elem != QRangeSlider::NONE) {
+  if (elem != QStyle::SC_None) {
     ev->accept();
     tracking = elem;
   }
@@ -551,13 +697,13 @@ void QRangeSlider::mousePressEvent(QMouseEvent* ev)
   qDebug() << "Tracking ";
 
   switch(tracking) {
-  case QRangeSlider::NONE:
+  case QStyle::SC_None:
     qDebug() << "NONE";
     break;
-  case QRangeSlider::FIRST:
+  case QStyle::SC_SliderHandle:
     qDebug() << "FIRST";
     break;
-  case QRangeSlider::SECOND:
+  case QStyleRangeSlider::SC_SliderHandle2:
     qDebug() << "SECOND";
     break;
   default:
@@ -570,26 +716,33 @@ void QRangeSlider::mousePressEvent(QMouseEvent* ev)
 */
 void QRangeSlider::mouseMoveEvent(QMouseEvent* ev)
 {
-  if (tracking != NONE) {
+  if (tracking != QStyle::SC_None) {
     ev->accept();
-    QRect bbox = getBBox();
-    int val = (cutoffRange_.second-cutoffRange_.first) *
-      (ev->pos().x() - SliderProperties::getGrooveX(bbox)) /
-      SliderProperties::getGrooveWidth(bbox) + cutoffRange_.first;
 
-    if (val < cutoffRange_.first)
-      val = cutoffRange_.first;
-    if (val > cutoffRange_.second)
-      val = cutoffRange_.second;
+    const QStyleRangeSlider* style = styleRangeSlider();
+    QRect bbox = getBBox();
+    int val =
+      style->sliderPositionFromValue(
+        style->getGrooveX(bbox),
+        style->getGrooveX(bbox) + style->getGrooveWidth(bbox),
+        ev->pos().x(),
+        cutoffRange().second-cutoffRange().first
+        );
+
+    qDebug()<<val;
+    if (val < cutoffRange().first)
+      val = cutoffRange().first;
+    if (val > cutoffRange().second)
+      val = cutoffRange().second;
 
     range_t newRange = range();
 
-    if (tracking == FIRST) {
+    if (tracking == QStyle::SC_SliderHandle) {
       newRange.first = val;
       if (val > newRange.second)
         newRange.second = val;
     }
-    else if(tracking == SECOND) {
+    else if(tracking == QStyleRangeSlider::SC_SliderHandle2) {
       newRange.second = val;
       if (val < newRange.first)
         newRange.first = val;
@@ -614,17 +767,17 @@ void QRangeSlider::clamp(range_t& value, const range_t& clampTo)
 
 void QRangeSlider::setRange(const QPair<int,int>& range_in) {
   range_t range = range_in;
-  clamp(range, cutoffRange_);
-  if(this->range_ != range) {
-    this->range_ = range;
+  clamp(range, cutoffRange());
+  if(this->range() != range) {
+    styleOptionRangeSlider_.setRange(range);
     update();
     emit rangeChanged(range);
   }
 }
 
 void QRangeSlider::setCutoffRange(const QPair<int, int>& cutoffRange) {
-  if(this->cutoffRange_ != cutoffRange) {
-    this->cutoffRange_ = cutoffRange;
+  if(this->cutoffRange() != cutoffRange) {
+    styleOptionRangeSlider_.setCutoffRange(cutoffRange);
     setRange(this->range());
     update();
     emit cutoffRangeChanged(cutoffRange);
@@ -636,7 +789,7 @@ void QRangeSlider::setCutoffRange(const QPair<int, int>& cutoffRange) {
 */
 void QRangeSlider::mouseReleaseEvent(QMouseEvent* ev)
 {
-  tracking=NONE;
+  tracking = QStyle::SC_None;
 }
 
 /*!
@@ -647,23 +800,15 @@ QSize QRangeSlider::sizeHint() const
   //Q_D(const QRangeSlider);
   ensurePolished();
   const int SliderLength = 84;
-  QStyleOptionSlider opt;
-  initStyleOption(&opt);
-  int thick = style()->pixelMetric(QStyle::PM_SliderThickness, &opt, this);
-  /*
-    if (d->tickPosition & TicksAbove)
-    thick += TickSpace;
-    if (d->tickPosition & TicksBelow)
-    thick += TickSpace;
-  */
+  int thick = styleRangeSlider()->pixelMetric(QStyle::PM_SliderThickness,
+                                   &styleOptionRangeSlider_, this);
   int w = thick, h = SliderLength;
-  //w = 25;
-  if (orientation_ == Qt::Horizontal) {
+  if (orientation() == Qt::Horizontal) {
     w = SliderLength;
     h = thick;
   }
-  return style()->sizeFromContents(QStyle::CT_Slider,
-                                   &opt,
+  return styleRangeSlider()->sizeFromContents(QStyle::CT_Slider,
+                                   &styleOptionRangeSlider_,
                                    QSize(w, h),
                                    this).expandedTo(
                                                  QApplication::globalStrut());
@@ -674,13 +819,9 @@ QSize QRangeSlider::sizeHint() const
 */
 QSize QRangeSlider::minimumSizeHint() const
 {
-  //    Q_D(const QRangeSlider);
   QSize s = sizeHint();
-  QStyleOptionSlider opt;
-  initStyleOption(&opt);
-  //int length = style()->pixelMetric(QStyle::PM_SliderLength, &opt, this);
   int length = 25;
-  if (orientation_ == Qt::Horizontal)
+  if (orientation() == Qt::Horizontal)
     s.setWidth(length);
   else
     s.setHeight(length);
@@ -701,16 +842,16 @@ QSize QRangeSlider::minimumSizeHint() const
 
 void QRangeSlider::setTickPosition(QSlider::TickPosition position)
 {
-  assert(position==QSlider::TicksBelow &&
+  assert(position == QSlider::TicksBelow &&
          "Only QSlider::TicksBelow is implemented");
-  tickPosition_ = position;
+  styleOptionRangeSlider_.setTickPosition(position);
   update();
   updateGeometry();
 }
 
 QSlider::TickPosition QRangeSlider::tickPosition() const
 {
-  return tickPosition_;
+  return styleOptionRangeSlider_.tickPosition();
 }
 
 /*!
@@ -762,6 +903,16 @@ int QRangeSlider::tickInterval() const
 
   Use setValue() instead.
 */
+
+
+const QStyleRangeSlider* QRangeSlider::styleRangeSlider() const
+{
+  if (!styleRangeSlider_)
+    styleRangeSlider_ = new QStyleRangeSlider();
+
+  styleRangeSlider_->setRealStyle(style());
+  return styleRangeSlider_;
+}
 
 #endif
 

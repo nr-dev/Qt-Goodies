@@ -42,7 +42,9 @@
 #ifndef QRANGESLIDER_H
 #define QRANGESLIDER_H
 
+#include <QtGui/QStyle>
 #include <QtGui/QSlider>
+#include <QtGui/QStyleOptionComplex>
 
 QT_BEGIN_HEADER
 
@@ -51,7 +53,62 @@ QT_BEGIN_HEADER
 QT_MODULE(Gui)
 
 class QRangeSliderPrivate;
-class QStyleOptionSlider;
+class QStyleOptionRangeSlider;
+class QStyleRangeSlider;
+
+class QStyleOptionRangeSlider : public QStyleOptionComplex {
+ public:
+    typedef QPair<int,int> range_t;
+    void setTickPosition(QSlider::TickPosition position) {
+      tickPosition_ = position;
+    }
+
+    QSlider::TickPosition tickPosition() const
+    {
+      return tickPosition_;
+    }
+
+    void setTickInterval(int ti);
+    int tickInterval() const;
+
+    const range_t& range() const
+    {
+      return range_;
+    }
+
+    const range_t& cutoffRange() const
+    {
+      return cutoffRange_;
+    }
+
+    void setOrientation(Qt::Orientation orientation)
+    {
+      orientation_ = orientation;
+    }
+
+    void setCutoffRange(const range_t& cutoffRange)
+    {
+      cutoffRange_ = cutoffRange;
+    }
+
+    void setRange(const range_t& range)
+    {
+      range_ = range;
+    }
+
+    Qt::Orientation orientation() const
+    {
+      return orientation_;
+    }
+
+ private:
+    range_t range_;
+    range_t cutoffRange_;
+
+    QSlider::TickPosition tickPosition_;
+    Qt::Orientation orientation_;
+};
+
 class QRangeSlider : public QWidget
 {
     Q_OBJECT
@@ -93,14 +150,15 @@ public:
 
     bool event(QEvent* event);
 
-    const range_t& range() {
-      return range_;
+    const range_t& range() const {
+      return styleOptionRangeSlider_.range();
     }
 
-    const range_t& cutoffRange() {
-      return cutoffRange_;
+    const range_t& cutoffRange() const {
+      return styleOptionRangeSlider_.cutoffRange();
     }
 
+    QRect getBBox() const;
  signals:
     void rangeChanged(QPair<int, int> range);
     void cutoffRangeChanged(QPair<int, int> range);
@@ -110,30 +168,45 @@ public:
     void setCutoffRange(const QPair<int, int>& value);
 
  protected:
-    void init();
+    void init(Qt::Orientation orientation);
 
     void paintEvent(QPaintEvent* ev);
     void mousePressEvent(QMouseEvent* ev);
     void mouseReleaseEvent(QMouseEvent* ev);
     void mouseMoveEvent(QMouseEvent* ev);
-    void initStyleOption(QStyleOptionSlider* option) const;
-    QRect getBBox() const;
+    void initStyleOption(QStyleOptionRangeSlider* option);
+    const QStyleRangeSlider* styleRangeSlider() const;
+    Qt::Orientation orientation() const
+    {
+      return styleOptionRangeSlider_.orientation();
+    }
 
  public:
     Q_DISABLE_COPY(QRangeSlider)
 
+    enum ELEMENT { NONE = 0x0, FIRST = 0x1, SECOND = 0x2};
+
+    QStyle::SubControl tracking;
+
+
+    QStyleOptionRangeSlider styleOptionRangeSlider_;
+    /*
     range_t range_;
     range_t cutoffRange_;
 
-    enum ELEMENT { NONE = 0x0, FIRST = 0x1, SECOND = 0x2};
-
-    ELEMENT tracking;
     QSlider::TickPosition tickPosition_;
     Qt::Orientation orientation_;
+    */
 
     static void clamp(int& value, const range_t& clamp_to);
     static void clamp(range_t& value, const range_t& clamp_to);
+
+ private:
+    static QStyleRangeSlider* styleRangeSlider_;
 };
+
+
+
 
 //QT_END_NAMESPACE
 
