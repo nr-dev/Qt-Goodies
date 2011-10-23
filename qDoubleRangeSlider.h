@@ -10,10 +10,10 @@ class QDoubleRangeSlider : public QWidget
     public:
   typedef QPair<double,double> range_t;
 
-  static const double numericalLimitMax() {
+  static double numericalLimitMax() {
     return std::numeric_limits<float>::max();
   }
-  static const double numericalLimitMin() {
+  static double numericalLimitMin() {
     return -std::numeric_limits<float>::max();
   }
   static range_t numericalLimits() {
@@ -25,7 +25,7 @@ class QDoubleRangeSlider : public QWidget
   Q_PROPERTY(range_t cutoffRange
              READ cutoffRange
              WRITE setCutoffRange
-             NOTIFY maxRangeChanged)
+             NOTIFY cutoffRangeChanged)
 
   explicit QDoubleRangeSlider(QWidget* parent = 0);
   explicit QDoubleRangeSlider(Qt::Orientation orientation,
