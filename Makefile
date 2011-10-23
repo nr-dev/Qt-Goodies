@@ -1,7 +1,7 @@
 include Makefile.inc
 
 CXXINCLUDES:= $(CXXINCLUDES)
-CXXFLAGS:= $(CXXINCLUDES) $(CXXFLAGS) -fPIC -g2
+CXXFLAGS:= $(CXXINCLUDES) $(CXXFLAGS) -fPIC -g2 -Wall -Werror -pedantic -Wno-long-long
 LDFLAGS:= $(LDFLAGS) -lQtGui
 LD:=g++
 
