@@ -62,8 +62,8 @@ QStyleRangeSlider* QRangeSlider::styleRangeSlider_ = 0;
 
 class QStyleRangeSlider : public QStyle {
 public:
-  static const float factor = 0.5;
-  static const int grooveMarginX = 20;
+  static const float factor;
+  static const int grooveMarginX;
 
   static const QStyle::PixelMetric PM_RangeSliderLength =
     QStyle::PixelMetric(QStyle::PM_CustomBase + 1);
@@ -86,7 +86,7 @@ public:
                        const QStyleOption* option,
                        const QWidget* widget) const
   {
-    realStyle_->subElementRect(element, option, widget);
+    return realStyle_->subElementRect(element, option, widget);
   }
 
   void drawComplexControl(QStyle::ComplexControl control,
@@ -156,7 +156,7 @@ public:
                          const QSize& contentsSize,
                          const QWidget* widget) const
   {
-    realStyle_->sizeFromContents(type, option, contentsSize, widget);
+    return realStyle_->sizeFromContents(type, option, contentsSize, widget);
   }
 
   int styleHint(QStyle::StyleHint hint,
@@ -164,21 +164,21 @@ public:
                 const QWidget* widget,
                 QStyleHintReturn* returnData) const
   {
-    realStyle_->styleHint(hint, option, widget, returnData);
+    return realStyle_->styleHint(hint, option, widget, returnData);
   }
 
   QPixmap standardPixmap(QStyle::StandardPixmap standardPixmap,
                          const QStyleOption* option,
                          const QWidget* widget) const
   {
-    realStyle_->standardPixmap(standardPixmap, option, widget);
+    return realStyle_->standardPixmap(standardPixmap, option, widget);
   }
 
   QPixmap generatedIconPixmap(QIcon::Mode iconMode,
                               const QPixmap& pixmap,
                               const QStyleOption* option) const
   {
-    realStyle_->generatedIconPixmap(iconMode, pixmap, option);
+    return realStyle_->generatedIconPixmap(iconMode, pixmap, option);
   }
 
 
@@ -262,6 +262,8 @@ public:
 private:
   QStyle* realStyle_;
 };
+const float QStyleRangeSlider::factor = 0.5;
+const int QStyleRangeSlider::grooveMarginX = 20;
 
 
 /*!
