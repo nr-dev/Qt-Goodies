@@ -95,13 +95,16 @@ public:
                           const QWidget* widget) const
   {
     if (control == QStyle::CC_CustomBase) {
-      QRect bbox = static_cast<const QRangeSlider*>(widget)->getBBox();
       const QRangeSlider* rSlider = static_cast<const QRangeSlider*>(widget);
+      QRect bbox = rSlider->getBBox();
+      QPair<int, int> range = rSlider->range();
+      QPair<int, int> cutoffRange = rSlider->cutoffRange();
       paintGroove(*painter, bbox);
-      paintFilling(*painter, bbox, rSlider->range(), rSlider->cutoffRange());
+
+      paintFilling(*painter, bbox, range, cutoffRange);
       paintTicks(*painter, bbox);
-      paintMarker(*painter, bbox, rSlider->range(), rSlider->cutoffRange(), FIRST);
-      paintMarker(*painter, bbox, rSlider->range(), rSlider->cutoffRange(), SECOND);
+      paintMarker(*painter, bbox, range, cutoffRange, FIRST);
+      paintMarker(*painter, bbox, range, cutoffRange, SECOND);
       return;
     }
 
@@ -227,6 +230,8 @@ public:
   }
   int getPosMin(const QRect& bbox, int min,
                 const QPair<int, int>& cutoffRange) const {
+    if (cutoffRange.second == cutoffRange.first)
+      return getGrooveX(bbox);
     return int(getGrooveX(bbox) + getGrooveWidth(bbox) *
                (min - cutoffRange.first)/
                (1.0 * (cutoffRange.second - cutoffRange.first)));
@@ -720,6 +725,8 @@ void QRangeSlider::mouseMoveEvent(QMouseEvent* ev)
 {
   if (tracking != QStyle::SC_None) {
     ev->accept();
+    if (cutoffRange().second == cutoffRange().first)
+      return;
 
     const QStyleRangeSlider* style = styleRangeSlider();
     QRect bbox = getBBox();

@@ -47,6 +47,10 @@ class QDoubleRangeSlider : public QWidget
 
  private:
   void setup();
+  void resetInternalCutoffRange();
+  void resetInternalRange();
+
+
 
   QRangeSlider* slider_;
 

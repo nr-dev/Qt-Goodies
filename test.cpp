@@ -24,14 +24,19 @@ int main(int argc, char* argv[])
   QWidget* w = new QWidget(&mainWin);
   mainWin.setCentralWidget(w);
 
-  QLayout* layout = new QHBoxLayout(w);
+  QLayout* layout = new QVBoxLayout(w);
   w->setLayout(layout);
 
   QDoubleRangeSlider* slider;
   slider = new QDoubleRangeSlider(Qt::Horizontal, w);
   slider->setSizePolicy(QSizePolicy(QSizePolicy::Expanding,
                                     QSizePolicy::Expanding));
+  slider->setCutoffRange(QPair<double, double>(0,0));
   layout->addWidget(slider);
+
+  QSlider* slider2 = new QSlider(Qt::Horizontal);
+  slider2->setRange(0,0);
+  layout->addWidget(slider2);
 
   mainWin.show();
   return app.exec();

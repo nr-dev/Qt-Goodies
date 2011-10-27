@@ -22,19 +22,31 @@ QDoubleRangeSlider::QDoubleRangeSlider(Qt::Orientation orientation,
 void
 QDoubleRangeSlider::setup()
 {
-  QLayout* layout=new QHBoxLayout(this);
+  QLayout* layout = new QHBoxLayout(this);
   setLayout(layout);
   layout->addWidget(slider_);
   layout->setContentsMargins(0,0,0,0);
   cutoffRange_ = numericalLimits();
   range_ = cutoffRange_;
-  slider_->setCutoffRange(QPair<int, int>(0,10000));
-  slider_->setRange(QPair<int, int>(0,10000));
+  resetInternalCutoffRange();
+  resetInternalRange();
   bool ok = true;
   ok &= connect(slider_,SIGNAL(rangeChanged(QPair<int,int>)),
                 this,SLOT(rangeChanged(QPair<int,int>)));
   assert(ok);
 }
+
+
+void QDoubleRangeSlider::resetInternalCutoffRange()
+{
+  slider_->setCutoffRange(QPair<int, int>(0,10000));
+}
+
+void QDoubleRangeSlider::resetInternalRange()
+{
+  slider_->setRange(QPair<int, int>(0,10000));
+}
+
 
 bool
 QDoubleRangeSlider::cmp(int a, int b, uint offset)
@@ -55,6 +67,9 @@ void
 QDoubleRangeSlider::setRange(QPair<double, double> range)
 {
   clamp(range,cutoffRange());
+  if (range_ == range)
+    return;
+
   range_ = range;
 
   //Need to allow for perfect values
@@ -72,6 +87,17 @@ void
 QDoubleRangeSlider::setCutoffRange(QPair<double, double> cutoffRange)
 {
   clamp(cutoffRange, numericalLimits());
+  if (cutoffRange_ == cutoffRange)
+    return;
+
+  if (cutoffRange.first == cutoffRange.second) {
+    slider_->setCutoffRange(QPair<int,int>(0, 0));
+  }
+  else {
+    resetInternalCutoffRange();
+    resetInternalRange();
+  }
+
   QPair<double, double> oRange = range();
 
   cutoffRange_ = cutoffRange;
@@ -80,17 +106,20 @@ QDoubleRangeSlider::setCutoffRange(QPair<double, double> cutoffRange)
   emit cutoffRangeChanged(cutoffRange_);
 }
 
+
 QDoubleRangeSlider::range_t
 QDoubleRangeSlider::range() const
 {
   return range_;
 }
 
+
 QDoubleRangeSlider::range_t
 QDoubleRangeSlider::cutoffRange() const
 {
   return cutoffRange_;
 }
+
 
 double
 QDoubleRangeSlider::convertFromRangeSlider(int value) const
@@ -105,6 +134,7 @@ QDoubleRangeSlider::convertFromRangeSlider(int value) const
     cutoffRange_.first;
 }
 
+
 QPair<double, double>
 QDoubleRangeSlider::convertFromRangeSlider(QPair<int, int> value) const
 {
@@ -113,8 +143,8 @@ QDoubleRangeSlider::convertFromRangeSlider(QPair<int, int> value) const
                               convertFromRangeSlider(value.second));
 }
 
-int
-QDoubleRangeSlider::convertToRangeSlider(double value) const
+
+int QDoubleRangeSlider::convertToRangeSlider(double value) const
 {
 
   double retVal = (value-cutoffRange_.first)/
