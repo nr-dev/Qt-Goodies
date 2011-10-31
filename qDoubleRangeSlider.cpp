@@ -91,6 +91,9 @@ QDoubleRangeSlider::setCutoffRange(QPair<double, double> cutoffRange)
   if (cutoffRange_ == cutoffRange)
     return;
 
+  QPair<double, double> oRange = range();
+  cutoffRange_ = cutoffRange;
+
   if (cutoffRange.first == cutoffRange.second) {
     slider_->setCutoffRange(QPair<int,int>(0, 0));
   }
@@ -98,10 +101,6 @@ QDoubleRangeSlider::setCutoffRange(QPair<double, double> cutoffRange)
     resetInternalCutoffRange();
     resetInternalRange();
   }
-
-  QPair<double, double> oRange = range();
-
-  cutoffRange_ = cutoffRange;
 
   setRange(oRange);
   emit cutoffRangeChanged(cutoffRange_);
@@ -152,6 +151,9 @@ QDoubleRangeSlider::convertFromBase(QPair<int, int> value) const
 void
 QDoubleRangeSlider::rangeChanged(QPair<int, int> value)
 {
+  if (cutoffRange_.second == cutoffRange_.first)
+    return;
+
   QPair<double, double> range = convertFromBase(value);
 
   if (!cmp(value,expectValue_,1)) {
@@ -162,7 +164,6 @@ QDoubleRangeSlider::rangeChanged(QPair<int, int> value)
 
 int QDoubleRangeSlider::convertToBase(double value) const
 {
-
   double retVal = (value-cutoffRange_.first)/
     (cutoffRange_.second-cutoffRange_.first);
 
