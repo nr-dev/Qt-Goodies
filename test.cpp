@@ -31,7 +31,8 @@ int main(int argc, char* argv[])
   slider = new QDoubleRangeSlider(Qt::Horizontal, w);
   slider->setSizePolicy(QSizePolicy(QSizePolicy::Expanding,
                                     QSizePolicy::Expanding));
-  slider->setCutoffRange(QPair<double, double>(0, 10));
+  slider->setCutoffRange(QPair<double, double>(1, 10));
+  slider->setLogarithmic(true);
   layout->addWidget(slider);
 
   QSlider* slider2 = new QSlider(Qt::Horizontal);

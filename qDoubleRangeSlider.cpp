@@ -1,4 +1,5 @@
 #include "qDoubleRangeSlider.h"
+#include <cmath>
 
 #include <QtGui/QHBoxLayout>
 #include <cassert>
@@ -22,15 +23,23 @@ QDoubleRangeSlider::QDoubleRangeSlider(Qt::Orientation orientation,
 
 void QDoubleRangeSlider::setup()
 {
+  //GUI elements
   QLayout* layout = new QHBoxLayout(this);
   setLayout(layout);
   layout->addWidget(slider_);
   layout->setContentsMargins(0,0,0,0);
+
+  //Simple values, with no invariant dependencies
+  slider_->setUnitConverter(this);
+  isLogarithmic_ = false;
+
+  //Values with interdependencies
   cutoffRange_ = numericalLimits();
   range_ = cutoffRange_;
   resetInternalCutoffRange();
   resetInternalRange();
-  slider_->setUnitConverter(this);
+
+  //Connections
   bool ok = true;
   ok &= connect(slider_,SIGNAL(rangeChanged(QPair<int,int>)),
                 this,SLOT(rangeChanged(QPair<int,int>)));
@@ -123,14 +132,26 @@ QDoubleRangeSlider::cutoffRange() const
 
 double QDoubleRangeSlider::convertFromBaseToDouble(int value) const
 {
-
   QPair<int, int> sliderMaxRange = slider_->cutoffRange();
 
-  double retVal=(value-sliderMaxRange.first) /
-    double(sliderMaxRange.second-sliderMaxRange.first);
+  int first  = sliderMaxRange.first;
+  int second = sliderMaxRange.second;
 
-  return retVal * (cutoffRange_.second - cutoffRange_.first) +
-    cutoffRange_.first;
+  double retVal=(value - first) / double(second - first);
+
+  double offset = cutoffRange_.first;
+
+  double max = cutoffRange_.second;
+
+  if(isLogarithmic_) {
+    offset = log(offset);
+    max = log(max);
+  }
+  double range = (max - offset);
+
+  retVal = retVal * range + offset;
+
+  return (isLogarithmic_?exp(retVal):retVal);
 }
 
 QVariant QDoubleRangeSlider::convertFromBase(int value) const
@@ -215,4 +236,16 @@ bool QDoubleRangeSlider::clamp(double& value,
     return true;
   }
   return false;
+}
+
+
+bool QDoubleRangeSlider::isLogarithmic() const
+{
+  return isLogarithmic_;
+}
+
+
+void QDoubleRangeSlider::setLogarithmic(bool logaritmic)
+{
+  isLogarithmic_ = logaritmic;
 }

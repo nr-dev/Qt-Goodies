@@ -24,6 +24,7 @@ class QDoubleRangeSlider
   }
 
 
+  Q_PROPERTY(bool logaritmic READ isLogarithmic WRITE setLogarithmic)
   Q_PROPERTY(range_t range READ range WRITE setRange NOTIFY rangeChanged)
   Q_PROPERTY(range_t cutoffRange
              READ cutoffRange
@@ -37,9 +38,12 @@ class QDoubleRangeSlider
   range_t range() const;
   range_t cutoffRange() const;
 
+  bool isLogarithmic() const;
+
  public slots:
   void setRange(QPair<double, double>);
   void setCutoffRange(QPair<double, double>);
+  void setLogarithmic(bool logaritmic);
 
  signals:
   void rangeChanged(QPair<double, double>);
@@ -78,6 +82,8 @@ class QDoubleRangeSlider
   static bool clamp(QPair<double,double>& value,
                     const QPair<double,double>& limits);
   static bool clamp(double& value, const QPair<double,double>& limits);
+
+  bool isLogarithmic_;
 };
 
 #endif // QDOUBLESLIDER_H
