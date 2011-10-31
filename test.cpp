@@ -31,11 +31,11 @@ int main(int argc, char* argv[])
   slider = new QDoubleRangeSlider(Qt::Horizontal, w);
   slider->setSizePolicy(QSizePolicy(QSizePolicy::Expanding,
                                     QSizePolicy::Expanding));
-  slider->setCutoffRange(QPair<double, double>(0,0));
+  slider->setCutoffRange(QPair<double, double>(0, 10));
   layout->addWidget(slider);
 
   QSlider* slider2 = new QSlider(Qt::Horizontal);
-  slider2->setRange(0,0);
+  //slider2->setRange(0,0);
   layout->addWidget(slider2);
 
   mainWin.show();

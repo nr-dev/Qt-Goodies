@@ -55,6 +55,7 @@ QT_MODULE(Gui)
 class QRangeSliderPrivate;
 class QStyleOptionRangeSlider;
 class QStyleRangeSlider;
+class RangeSliderUnitConverter;
 
 class QStyleOptionRangeSlider : public QStyleOptionComplex {
  public:
@@ -124,6 +125,8 @@ class QRangeSlider : public QWidget
     Q_PROPERTY(int tickInterval READ tickInterval WRITE setTickInterval)
 
 public:
+    enum ELEMENT { NONE = 0x0, FIRST = 0x1, SECOND = 0x2};
+
     enum TickPosition {
         NoTicks = 0,
         TicksAbove = 1,
@@ -149,6 +152,8 @@ public:
     int tickInterval() const;
 
     bool event(QEvent* event);
+
+    void setUnitConverter(const RangeSliderUnitConverter* = 0);
 
     const range_t& range() const {
       return styleOptionRangeSlider_.range();
@@ -181,28 +186,20 @@ public:
       return styleOptionRangeSlider_.orientation();
     }
 
- public:
+ private:
     Q_DISABLE_COPY(QRangeSlider)
-
-    enum ELEMENT { NONE = 0x0, FIRST = 0x1, SECOND = 0x2};
 
     QStyle::SubControl tracking;
 
 
     QStyleOptionRangeSlider styleOptionRangeSlider_;
-    /*
-    range_t range_;
-    range_t cutoffRange_;
-
-    QSlider::TickPosition tickPosition_;
-    Qt::Orientation orientation_;
-    */
 
     static void clamp(int& value, const range_t& clamp_to);
     static void clamp(range_t& value, const range_t& clamp_to);
 
  private:
     static QStyleRangeSlider* styleRangeSlider_;
+    const RangeSliderUnitConverter* unitConverter_;
 };
 
 

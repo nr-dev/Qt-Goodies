@@ -2,6 +2,7 @@
 
 #include <QtGui/QHBoxLayout>
 #include <cassert>
+#include <stdexcept>
 
 
 QDoubleRangeSlider::QDoubleRangeSlider(QWidget* parent)
@@ -19,8 +20,7 @@ QDoubleRangeSlider::QDoubleRangeSlider(Qt::Orientation orientation,
   setup();
 }
 
-void
-QDoubleRangeSlider::setup()
+void QDoubleRangeSlider::setup()
 {
   QLayout* layout = new QHBoxLayout(this);
   setLayout(layout);
@@ -30,6 +30,7 @@ QDoubleRangeSlider::setup()
   range_ = cutoffRange_;
   resetInternalCutoffRange();
   resetInternalRange();
+  slider_->setUnitConverter(this);
   bool ok = true;
   ok &= connect(slider_,SIGNAL(rangeChanged(QPair<int,int>)),
                 this,SLOT(rangeChanged(QPair<int,int>)));
@@ -39,12 +40,12 @@ QDoubleRangeSlider::setup()
 
 void QDoubleRangeSlider::resetInternalCutoffRange()
 {
-  slider_->setCutoffRange(QPair<int, int>(0,10000));
+  slider_->setCutoffRange(QPair<int, int>(0, 2048));
 }
 
 void QDoubleRangeSlider::resetInternalRange()
 {
-  slider_->setRange(QPair<int, int>(0,10000));
+  slider_->setRange(QPair<int, int>(0, 2048));
 }
 
 
@@ -73,7 +74,7 @@ QDoubleRangeSlider::setRange(QPair<double, double> range)
   range_ = range;
 
   //Need to allow for perfect values
-  QPair<int, int> nRange = convertToRangeSlider(range);
+  QPair<int, int> nRange = convertToBase(range);
   QPair<int, int> oRange = slider_->range();
 
   expectValue_ = nRange;
@@ -121,8 +122,7 @@ QDoubleRangeSlider::cutoffRange() const
 }
 
 
-double
-QDoubleRangeSlider::convertFromRangeSlider(int value) const
+double QDoubleRangeSlider::convertFromBaseToDouble(int value) const
 {
 
   QPair<int, int> sliderMaxRange = slider_->cutoffRange();
@@ -134,17 +134,33 @@ QDoubleRangeSlider::convertFromRangeSlider(int value) const
     cutoffRange_.first;
 }
 
-
-QPair<double, double>
-QDoubleRangeSlider::convertFromRangeSlider(QPair<int, int> value) const
+QVariant QDoubleRangeSlider::convertFromBase(int value) const
 {
-
-  return QPair<double, double>(convertFromRangeSlider(value.first),
-                              convertFromRangeSlider(value.second));
+  return convertFromBaseToDouble(value);
 }
 
 
-int QDoubleRangeSlider::convertToRangeSlider(double value) const
+QPair<double, double>
+QDoubleRangeSlider::convertFromBase(QPair<int, int> value) const
+{
+
+  return QPair<double, double>(convertFromBaseToDouble(value.first),
+                               convertFromBaseToDouble(value.second));
+}
+
+
+void
+QDoubleRangeSlider::rangeChanged(QPair<int, int> value)
+{
+  QPair<double, double> range = convertFromBase(value);
+
+  if (!cmp(value,expectValue_,1)) {
+    range_ = range;
+    emit rangeChanged(range);
+  }
+}
+
+int QDoubleRangeSlider::convertToBase(double value) const
 {
 
   double retVal = (value-cutoffRange_.first)/
@@ -157,23 +173,23 @@ int QDoubleRangeSlider::convertToRangeSlider(double value) const
 }
 
 
-void
-QDoubleRangeSlider::rangeChanged(QPair<int, int> value)
+int QDoubleRangeSlider::convertToBase(QVariant value) const
 {
-  QPair<double, double> range = convertFromRangeSlider(value);
+  bool isOk = false;
 
-  if (!cmp(value,expectValue_,1)) {
-    range_ = range;
-    emit rangeChanged(range);
-  }
+  double val = value.toDouble(&isOk);
+
+  if (!isOk)
+    throw std::domain_error("Invalid value specified, expected double");
+
+  return convertToBase(val);
 }
 
 QPair<int, int>
-QDoubleRangeSlider::convertToRangeSlider(QPair<double, double> value) const
+QDoubleRangeSlider::convertToBase(QPair<double, double> value) const
 {
-
-  return QPair<int, int>(convertToRangeSlider(value.first),
-                        convertToRangeSlider(value.second));
+  return QPair<int, int>(convertToBase(value.first),
+                        convertToBase(value.second));
 }
 
 bool QDoubleRangeSlider::clamp(QPair<double, double>& value,

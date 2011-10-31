@@ -2,9 +2,12 @@
 #define QDOUBLESLIDER_H
 
 #include "qRangeSlider.h"
+#include "RangeSliderUnitConverter.h"
 #include <limits>
 
-class QDoubleRangeSlider : public QWidget
+class QDoubleRangeSlider
+: public QWidget,
+  public RangeSliderUnitConverter
 {
   Q_OBJECT
     public:
@@ -59,11 +62,13 @@ class QDoubleRangeSlider : public QWidget
 
   QPair<int,int> expectValue_;
 
-  double convertFromRangeSlider(int) const;
-  QPair<double,double> convertFromRangeSlider(QPair<int, int>) const;
+  double convertFromBaseToDouble(int) const;
+  QVariant convertFromBase(int) const;
+  QPair<double,double> convertFromBase(QPair<int, int>) const;
 
-  int convertToRangeSlider(double value) const;
-  QPair<int, int> convertToRangeSlider(QPair<double, double> value) const;
+  int convertToBase(QVariant value) const;
+  int convertToBase(double value) const;
+  QPair<int, int> convertToBase(QPair<double, double> value) const;
 
   static bool cmp(int a, int b, uint tolerance = 0);
   static bool cmp(const QPair<int, int>& a,

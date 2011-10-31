@@ -47,11 +47,13 @@
 #endif
 #include <cassert>
 
-#include <QtCore/QDebug>
+#include "RangeSliderUnitConverter.h"
+
 #include <QtCore/QDebug>
 #include <QtCore/QEvent>
 #include <QtGui/QApplication>
 #include <QtGui/QPainter>
+#include <QtGui/QToolTip>
 #include <QtGui/QStyle>
 #include <QtGui/QStyleOption>
 
@@ -410,6 +412,7 @@ QRangeSlider::QRangeSlider(Qt::Orientation orientation, QWidget* parent)
 
 void QRangeSlider::init(Qt::Orientation orientation)
 {
+  unitConverter_ = 0;
   styleOptionRangeSlider_.setOrientation(orientation);
   setSizePolicy(QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed));
   styleOptionRangeSlider_.setCutoffRange(range_t(0, 100));
@@ -634,15 +637,13 @@ void QStyleRangeSlider::paintTicks(QPainter& p, const QRect& bbox) const
 */
 void QRangeSlider::paintEvent(QPaintEvent*)
 {
-  //    Q_D(QRangeSlider);
   QPainter p(this);
-  //QStyleOptionSlider opt;
-
   QRect bbox = getBBox();
 
-  qDebug() << bbox;
-
-  styleRangeSlider()->drawComplexControl(QStyle::CC_CustomBase, &styleOptionRangeSlider_, &p,this);
+  styleRangeSlider()->drawComplexControl(QStyle::CC_CustomBase,
+                                         &styleOptionRangeSlider_,
+                                         &p,
+                                         this);
 
 
 
@@ -654,8 +655,6 @@ void QRangeSlider::paintEvent(QPaintEvent*)
 
 bool QRangeSlider::event(QEvent* event)
 {
-  //    Q_D(QRangeSlider);
-
   switch(event->type()) {
   case QEvent::HoverEnter:
   case QEvent::HoverLeave:
@@ -687,14 +686,7 @@ QRect QRangeSlider::getBBox() const
 */
 void QRangeSlider::mousePressEvent(QMouseEvent* ev)
 {
-  //    Q_D(QRangeSlider);
   QStyle::SubControl elem = styleRangeSlider()->hitTestComplexControl(QStyle::CC_CustomBase, &styleOptionRangeSlider_, ev->pos(), this);
-  /*
-  ELEMENT elem = styleOptionRangeSlider_->getElement(getBBox(),
-                                              range(),
-                                              cutoffRange(),
-                                              ev->pos());
-  */
 
   if (elem != QStyle::SC_None) {
     ev->accept();
@@ -738,7 +730,6 @@ void QRangeSlider::mouseMoveEvent(QMouseEvent* ev)
         cutoffRange().second-cutoffRange().first
         );
 
-    qDebug()<<val;
     if (val < cutoffRange().first)
       val = cutoffRange().first;
     if (val > cutoffRange().second)
@@ -757,6 +748,30 @@ void QRangeSlider::mouseMoveEvent(QMouseEvent* ev)
         newRange.first = val;
     }
     setRange(newRange);
+    QPoint pos;
+    //Might have been clamped in setRange
+    newRange = range();
+    pos.setX(style->sliderValueFromPosition(
+                        style->getGrooveX(bbox),
+                        style->getGrooveX(bbox) + style->getGrooveWidth(bbox),
+                        int(0.5*(newRange.first + newRange.second)),
+                        cutoffRange().second-cutoffRange().first
+
+                        ));
+
+    QVariant first, second;
+    if (unitConverter_) {
+      first = unitConverter_->convertFromBase(newRange.first);
+      second = unitConverter_->convertFromBase(newRange.second);
+    }
+    else {
+      first = newRange.first;
+      second = newRange.second;
+    }
+    QString text =
+      QString("(%1, %2)").arg(first.toString()).arg(second.toString());
+
+    QToolTip::showText(mapToGlobal(pos), text, this, QRect());
   }
 }
 
@@ -834,7 +849,6 @@ QSize QRangeSlider::minimumSizeHint() const
     s.setWidth(length);
   else
     s.setHeight(length);
-  qDebug() << s;
   return s;
 }
 
@@ -921,6 +935,13 @@ const QStyleRangeSlider* QRangeSlider::styleRangeSlider() const
 
   styleRangeSlider_->setRealStyle(style());
   return styleRangeSlider_;
+}
+
+
+void
+QRangeSlider::setUnitConverter(const RangeSliderUnitConverter* unitConverter)
+{
+  unitConverter_ = unitConverter;
 }
 
 #endif
