@@ -686,12 +686,16 @@ QRect QRangeSlider::getBBox() const
 */
 void QRangeSlider::mousePressEvent(QMouseEvent* ev)
 {
-  QStyle::SubControl elem = styleRangeSlider()->hitTestComplexControl(QStyle::CC_CustomBase, &styleOptionRangeSlider_, ev->pos(), this);
+  QStyle::SubControl elem =
+    styleRangeSlider()->hitTestComplexControl(QStyle::CC_CustomBase,
+                                              &styleOptionRangeSlider_,
+                                              ev->pos(), this);
 
-  if (elem != QStyle::SC_None) {
-    ev->accept();
-    tracking = elem;
-  }
+  if (elem == QStyle::SC_None)
+    return;
+
+  ev->accept();
+  tracking = elem;
 
   qDebug() << "Tracking ";
 
@@ -708,6 +712,8 @@ void QRangeSlider::mousePressEvent(QMouseEvent* ev)
   default:
     abort();
   }
+
+  showValueTooltip();
 }
 
 /*!
@@ -748,31 +754,35 @@ void QRangeSlider::mouseMoveEvent(QMouseEvent* ev)
         newRange.first = val;
     }
     setRange(newRange);
-    QPoint pos;
-    //Might have been clamped in setRange
-    newRange = range();
-    pos.setX(style->sliderValueFromPosition(
-                        style->getGrooveX(bbox),
-                        style->getGrooveX(bbox) + style->getGrooveWidth(bbox),
-                        int(0.5*(newRange.first + newRange.second)),
-                        cutoffRange().second-cutoffRange().first
-
-                        ));
-
-    QVariant first, second;
-    if (unitConverter_) {
-      first = unitConverter_->convertFromBase(newRange.first);
-      second = unitConverter_->convertFromBase(newRange.second);
-    }
-    else {
-      first = newRange.first;
-      second = newRange.second;
-    }
-    QString text =
-      QString("(%1, %2)").arg(first.toString()).arg(second.toString());
-
-    QToolTip::showText(mapToGlobal(pos), text, this, QRect());
+    showValueTooltip();
   }
+}
+
+void QRangeSlider::showValueTooltip()
+{
+  QPoint pos;
+  range_t myRange = range();
+  const QStyleRangeSlider* style = styleRangeSlider();
+  QRect bbox = getBBox();
+  pos.setX(style->sliderValueFromPosition(
+                         style->getGrooveX(bbox),
+                         style->getGrooveX(bbox) + style->getGrooveWidth(bbox),
+                         int(0.5*(myRange.first + myRange.second)),
+                         cutoffRange().second-cutoffRange().first));
+
+  QVariant first, second;
+  if (unitConverter_) {
+    first = unitConverter_->convertFromBase(myRange.first);
+    second = unitConverter_->convertFromBase(myRange.second);
+  }
+  else {
+    first = myRange.first;
+    second = myRange.second;
+  }
+  QString text =
+    QString("(%1, %2)").arg(first.toString()).arg(second.toString());
+
+  QToolTip::showText(mapToGlobal(pos), text, this, QRect());
 }
 
 void QRangeSlider::clamp(int& val, const range_t& clampTo)

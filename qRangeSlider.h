@@ -186,6 +186,9 @@ public:
       return styleOptionRangeSlider_.orientation();
     }
 
+    void showValueTooltip();
+
+
  private:
     Q_DISABLE_COPY(QRangeSlider)
 
