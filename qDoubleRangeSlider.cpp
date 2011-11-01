@@ -156,7 +156,7 @@ double QDoubleRangeSlider::convertFromBaseToDouble(int value) const
 
 QVariant QDoubleRangeSlider::convertFromBase(int value) const
 {
-  return convertFromBaseToDouble(value);
+  return QString().setNum(convertFromBaseToDouble(value), 'g', 5);
 }
 
 
