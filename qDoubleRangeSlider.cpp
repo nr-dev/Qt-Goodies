@@ -90,6 +90,7 @@ QDoubleRangeSlider::setRange(QPair<double, double> range)
 
   if (!cmp(oRange,nRange,1)) {
     slider_->setRange(nRange);
+    emit rangeChanged(range);
   }
 }
 
