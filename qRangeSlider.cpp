@@ -728,11 +728,15 @@ void QRangeSlider::mouseMoveEvent(QMouseEvent* ev)
 
     const QStyleRangeSlider* style = styleRangeSlider();
     QRect bbox = getBBox();
+    int x = ev->pos().x();
+    int max = style->getGrooveX(bbox) + style->getGrooveWidth(bbox);
+    if (x > max)
+      x = max;
     int val =
       style->sliderPositionFromValue(
         style->getGrooveX(bbox),
-        style->getGrooveX(bbox) + style->getGrooveWidth(bbox),
-        ev->pos().x(),
+        max,
+        x,
         cutoffRange().second-cutoffRange().first
         );
 
