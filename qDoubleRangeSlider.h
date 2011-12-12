@@ -37,13 +37,14 @@ class QDoubleRangeSlider
 
   range_t range() const;
   range_t cutoffRange() const;
-
   bool isLogarithmic() const;
+  double tickInterval() const;
 
  public slots:
   void setRange(QPair<double, double>);
   void setCutoffRange(QPair<double, double>);
   void setLogarithmic(bool logaritmic);
+  void setTickInterval(double tickInterval);
 
  signals:
   void rangeChanged(QPair<double, double>);
@@ -66,6 +67,8 @@ class QDoubleRangeSlider
 
   QPair<int,int> expectValue_;
 
+  double tickInterval_;
+
   double convertFromBaseToDouble(int) const;
   QVariant convertFromBase(int) const;
   QPair<double,double> convertFromBase(QPair<int, int>) const;
@@ -84,6 +87,10 @@ class QDoubleRangeSlider
   static bool clamp(double& value, const QPair<double,double>& limits);
 
   bool isLogarithmic_;
+
+  static const uint RANGE_SLIDER_MAX = 2048;
+  static const uint RANGE_SLIDER_MIN = 0;
+  static const uint RANGE_SLIDER_DIV = RANGE_SLIDER_MAX - RANGE_SLIDER_MIN;
 };
 
 #endif // QDOUBLESLIDER_H

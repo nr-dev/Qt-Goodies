@@ -69,9 +69,6 @@ class QStyleOptionRangeSlider : public QStyleOptionComplex {
       return tickPosition_;
     }
 
-    void setTickInterval(int ti);
-    int tickInterval() const;
-
     const range_t& range() const
     {
       return range_;
@@ -102,9 +99,32 @@ class QStyleOptionRangeSlider : public QStyleOptionComplex {
       return orientation_;
     }
 
+    void setTickInterval(float tickInterval)
+    {
+      tickInterval_ = tickInterval;
+    }
+
+    float tickInterval() const
+    {
+      return tickInterval_;
+    }
+
+    void setLogarithmic(bool logarithmic)
+    {
+      logarithmic_ = logarithmic;
+    }
+
+    bool isLogarithmic() const
+    {
+      return logarithmic_;
+    }
+
  private:
     range_t range_;
     range_t cutoffRange_;
+
+    float tickInterval_;
+    bool logarithmic_;
 
     QSlider::TickPosition tickPosition_;
     Qt::Orientation orientation_;
@@ -122,7 +142,7 @@ class QRangeSlider : public QWidget
       Q_PROPERTY(QSlider::TickPosition tickPosition
                  READ tickPosition
                  WRITE setTickPosition)
-    Q_PROPERTY(int tickInterval READ tickInterval WRITE setTickInterval)
+    Q_PROPERTY(float tickInterval READ tickInterval WRITE setTickInterval)
 
 public:
     enum ELEMENT { NONE = 0x0, FIRST = 0x1, SECOND = 0x2};
@@ -148,8 +168,8 @@ public:
     void setTickPosition(QSlider::TickPosition position);
     QSlider::TickPosition tickPosition() const;
 
-    void setTickInterval(int ti);
-    int tickInterval() const;
+    void setTickInterval(float ti);
+    float tickInterval() const;
 
     bool event(QEvent* event);
 
@@ -162,6 +182,9 @@ public:
     const range_t& cutoffRange() const {
       return styleOptionRangeSlider_.cutoffRange();
     }
+
+    void setLogarithmic(bool logarithmic);
+    bool isLogarithmic() const;
 
     QRect getBBox() const;
  signals:

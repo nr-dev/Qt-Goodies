@@ -39,6 +39,8 @@ void QDoubleRangeSlider::setup()
   resetInternalCutoffRange();
   resetInternalRange();
 
+  setTickInterval(10.0);
+
   //Connections
   bool ok = true;
   ok &= connect(slider_,SIGNAL(rangeChanged(QPair<int,int>)),
@@ -49,12 +51,12 @@ void QDoubleRangeSlider::setup()
 
 void QDoubleRangeSlider::resetInternalCutoffRange()
 {
-  slider_->setCutoffRange(QPair<int, int>(0, 2048));
+  slider_->setCutoffRange(QPair<int, int>(RANGE_SLIDER_MIN, RANGE_SLIDER_MAX));
 }
 
 void QDoubleRangeSlider::resetInternalRange()
 {
-  slider_->setRange(QPair<int, int>(0, 2048));
+  slider_->setRange(QPair<int, int>(RANGE_SLIDER_MIN, RANGE_SLIDER_MAX));
 }
 
 
@@ -76,7 +78,7 @@ QDoubleRangeSlider::cmp(const QPair<int, int>& a,
 void
 QDoubleRangeSlider::setRange(QPair<double, double> range)
 {
-  clamp(range,cutoffRange());
+  clamp(range, cutoffRange());
   if (range_ == range)
     return;
 
@@ -131,6 +133,24 @@ QDoubleRangeSlider::cutoffRange() const
 }
 
 
+void
+QDoubleRangeSlider::setTickInterval(double tickInterval)
+{
+  tickInterval_ = tickInterval;
+  tickInterval = std::log(tickInterval);
+  double max = cutoffRange_.second;
+  double min = cutoffRange_.first;
+  if (isLogarithmic()) {
+    max = std::log(max);
+    min = std::log(min);
+  }
+  double div =  max - min;
+
+  tickInterval = (tickInterval)/div * RANGE_SLIDER_DIV;
+
+  slider_->setTickInterval(tickInterval);
+}
+
 double QDoubleRangeSlider::convertFromBaseToDouble(int value) const
 {
   QPair<int, int> sliderMaxRange = slider_->cutoffRange();
@@ -138,21 +158,21 @@ double QDoubleRangeSlider::convertFromBaseToDouble(int value) const
   int first  = sliderMaxRange.first;
   int second = sliderMaxRange.second;
 
-  double retVal=(value - first) / double(second - first);
+  double retVal = (value - first) / double(second - first);
 
   double offset = cutoffRange_.first;
 
   double max = cutoffRange_.second;
 
   if(isLogarithmic_) {
-    offset = log(offset);
-    max = log(max);
+    offset = std::log(offset);
+    max = std::log(max);
   }
   double range = (max - offset);
 
   retVal = retVal * range + offset;
 
-  return (isLogarithmic_?exp(retVal):retVal);
+  return (isLogarithmic_?std::exp(retVal):retVal);
 }
 
 QVariant QDoubleRangeSlider::convertFromBase(int value) const
@@ -189,8 +209,25 @@ int QDoubleRangeSlider::convertToBase(double value) const
   double retVal = (value-cutoffRange_.first)/
     (cutoffRange_.second-cutoffRange_.first);
 
-  QPair<int, int> sliderMaxRange = slider_->cutoffRange();
 
+  QPair<int, int> sliderMaxRange = slider_->cutoffRange();
+  if (isLogarithmic()) {
+    double offset = cutoffRange_.first;
+    double max = cutoffRange_.second;
+    value -= offset;
+    if(isLogarithmic_) {
+      /*
+      offset = log(offset);
+      max = log(max);
+      */
+    }
+    double range = (max - offset);
+
+    retVal = (retVal - offset)/range;
+
+
+    return int(retVal);
+  }
   return int(retVal * (sliderMaxRange.second - sliderMaxRange.first) +
              sliderMaxRange.first);
 }
@@ -249,4 +286,5 @@ bool QDoubleRangeSlider::isLogarithmic() const
 void QDoubleRangeSlider::setLogarithmic(bool logaritmic)
 {
   isLogarithmic_ = logaritmic;
+  setTickInterval(tickInterval_);
 }

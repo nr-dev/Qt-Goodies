@@ -40,6 +40,14 @@
  ****************************************************************************/
 
 
+#ifdef VARIABLE_DEBUG
+#include <QtCore/QDebug>
+#define SHOW(X) qDebug()<<#X<<X;
+#else
+#define SHOW(X)
+#endif
+
+
 #include "qRangeSlider.h"
 #ifndef QT_NO_SLIDER
 #ifndef QT_NO_ACCESSIBILITY
@@ -48,6 +56,7 @@
 #include <cassert>
 
 #include "RangeSliderUnitConverter.h"
+#include <cmath>
 
 #include <QtCore/QDebug>
 #include <QtCore/QEvent>
@@ -60,12 +69,13 @@
 
 QT_BEGIN_NAMESPACE
 
-QStyleRangeSlider* QRangeSlider::styleRangeSlider_ = 0;
-
 class QStyleRangeSlider : public QStyle {
 public:
-  static const float factor;
-  static const int grooveMarginX;
+  static const int grooveMarginVertical;
+  static const int grooveMarginHorizontal;
+  static const int markerWidth;
+  static const int tipOffset;
+  static const float tickLogBase;
 
   static const QStyle::PixelMetric PM_RangeSliderLength =
     QStyle::PixelMetric(QStyle::PM_CustomBase + 1);
@@ -77,6 +87,8 @@ public:
   {
     realStyle_->drawPrimitive(element, option, painter, widget);
   }
+
+
   void drawControl(QStyle::ControlElement element,
                    const QStyleOption* option,
                    QPainter* painter,
@@ -84,12 +96,15 @@ public:
   {
     realStyle_->drawControl(element, option, painter, widget);
   }
+
+
   QRect subElementRect(QStyle::SubElement element,
                        const QStyleOption* option,
                        const QWidget* widget) const
   {
     return realStyle_->subElementRect(element, option, widget);
   }
+
 
   void drawComplexControl(QStyle::ComplexControl control,
                           const QStyleOptionComplex* option,
@@ -104,7 +119,8 @@ public:
       paintGroove(*painter, bbox);
 
       paintFilling(*painter, bbox, range, cutoffRange);
-      paintTicks(*painter, bbox);
+      paintTicks(*painter, bbox, cutoffRange,
+                 rSlider->tickInterval(), rSlider->isLogarithmic());
       paintMarker(*painter, bbox, range, cutoffRange, FIRST);
       paintMarker(*painter, bbox, range, cutoffRange, SECOND);
       return;
@@ -214,21 +230,24 @@ public:
                          const QPair<int, int>& range,
                          const QPair<int, int>& cutoffRange,
                          WHICH which) const;
-  void paintTicks(QPainter& p, const QRect& bbox) const;
+  void paintTicks(QPainter& p, const QRect& bbox,
+                  const QPair<int, int>& cutoffRange,
+                  float tickInterval,
+                  bool logarithmic) const;
 
   int getGrooveX(const QRect& bbox) const {
     //    return int(bbox.x()+factor*.5*bbox.width());
-    return int(bbox.x() + grooveMarginX);
+    return int(bbox.x() + grooveMarginHorizontal);
   }
   int getGrooveY(const QRect& bbox) const {
-    return int(bbox.y() + factor * .5 * bbox.height());
+    return int(bbox.y() + grooveMarginVertical);
   }
   int getGrooveWidth(const QRect& bbox) const {
     //    return int((1.0-factor)*bbox.width());
-    return int(bbox.width() - grooveMarginX * 2);
+    return int(bbox.width() - grooveMarginHorizontal * 2);
   }
   int getGrooveHeight(const QRect& bbox) const {
-    return int((1.0 - factor) * bbox.height());
+    return int(bbox.height() - 2 * grooveMarginVertical);
   }
   int getPosMin(const QRect& bbox, int min,
                 const QPair<int, int>& cutoffRange) const {
@@ -269,8 +288,14 @@ public:
 private:
   QStyle* realStyle_;
 };
-const float QStyleRangeSlider::factor = 0.5;
-const int QStyleRangeSlider::grooveMarginX = 20;
+
+
+const int QStyleRangeSlider::tipOffset = 4;
+const int QStyleRangeSlider::markerWidth = 6;
+const int QStyleRangeSlider::grooveMarginVertical = tipOffset + 0;
+const int QStyleRangeSlider::grooveMarginHorizontal = markerWidth + 3;
+const float QStyleRangeSlider::tickLogBase = 1;
+QStyleRangeSlider* QRangeSlider::styleRangeSlider_ = 0;
 
 
 /*!
@@ -414,6 +439,7 @@ void QRangeSlider::init(Qt::Orientation orientation)
 {
   unitConverter_ = 0;
   styleOptionRangeSlider_.setOrientation(orientation);
+  styleOptionRangeSlider_.setTickInterval(1);
   setSizePolicy(QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed));
   styleOptionRangeSlider_.setCutoffRange(range_t(0, 100));
   styleOptionRangeSlider_.setRange(range_t(40, 60));
@@ -433,7 +459,7 @@ QPolygon QStyleRangeSlider::getMarkerArea(const QRect& bbox,
                                           QStyleRangeSlider::WHICH which) const
 {
   QPolygon paintArea;
-  int width = 10;
+  int width = markerWidth;
 
     int pos;
     if (which & FIRST) {
@@ -447,7 +473,8 @@ QPolygon QStyleRangeSlider::getMarkerArea(const QRect& bbox,
 
     int y = getGrooveY(bbox);
     int base = y + getGrooveHeight(bbox);
-    int tip = int(base + 0.1 * bbox.height());
+    y -= tipOffset/2;
+    int tip = base + tipOffset;
 
     paintArea.push_back(QPoint(pos, y));
     paintArea.push_back(QPoint(pos, tip));
@@ -538,7 +565,7 @@ void QStyleRangeSlider::paintGroove(QPainter& p, const QRect& bbox) const
   grad.setColorAt(0.85, Qt::gray);
   grad.setColorAt(1.0, Qt::white);
 
-  p.fillRect(bbox, Qt::blue);
+  //p.fillRect(bbox, Qt::blue);
   p.save();
   //p.setRenderHint(QPainter::Antialiasing, true);
   p.setRenderHint(QPainter::HighQualityAntialiasing, true);
@@ -613,24 +640,42 @@ void QStyleRangeSlider::paintMarker(QPainter& p,
   }
 }
 
-void QStyleRangeSlider::paintTicks(QPainter& p, const QRect& bbox) const
+void QStyleRangeSlider::paintTicks(QPainter& p, const QRect& bbox,
+                                   const QPair<int, int>& cutoffRange,
+                                   float tickInterval,
+                                   bool isLogarithmic) const
 {
+  return;
   int top = getGrooveY(bbox) + getGrooveHeight(bbox);
   int bottom = bbox.height();
-  int height = bottom - top;
 
-  bottom -= int(0.2 * height);
-  top += int(0.2 * top);
+  top = 0;
 
   int baseX = getGrooveX(bbox);
   int width = getGrooveWidth(bbox);
 
-  for (int i = 0; i < 100; i += 5) {
-    int x = baseX + i * width / 100;
+  p.setPen(Qt::black);
+  double min = cutoffRange.first;
+  double max = cutoffRange.second;
+
+  float div = max - min;
+  float interval = tickInterval;
+
+  if (tickInterval == 0)
+    return;
+
+  if (tickInterval < double(div) / width)
+    tickInterval = double(div) / width;
+
+  p.drawLine(QPoint(baseX, top), QPoint(baseX, bottom));
+
+
+  for (float i = interval; i <= div; i += interval) {
+    int x = int(baseX + i * width / div);
     p.drawLine(QPoint(x, top), QPoint(x, bottom));
   }
-
 }
+
 
 /*!
   \reimp
@@ -729,16 +774,13 @@ void QRangeSlider::mouseMoveEvent(QMouseEvent* ev)
     const QStyleRangeSlider* style = styleRangeSlider();
     QRect bbox = getBBox();
     int x = ev->pos().x();
-    int max = style->getGrooveX(bbox) + style->getGrooveWidth(bbox);
+    int min = style->getGrooveX(bbox);
+    int max = min + style->getGrooveWidth(bbox);
     if (x > max)
       x = max;
     int val =
       style->sliderPositionFromValue(
-        style->getGrooveX(bbox),
-        max,
-        x,
-        cutoffRange().second-cutoffRange().first
-        );
+        min, max, x, cutoffRange().second-cutoffRange().first);
 
     if (val < cutoffRange().first)
       val = cutoffRange().first;
@@ -917,16 +959,15 @@ QSlider::TickPosition QRangeSlider::tickPosition() const
   \sa tickPosition, lineStep(), pageStep()
 */
 
-void QRangeSlider::setTickInterval(int ts)
+void QRangeSlider::setTickInterval(float ts)
 {
-  //    d_func()->tickInterval = qMax(0, ts);
+  styleOptionRangeSlider_.setTickInterval(ts);
   update();
 }
 
-int QRangeSlider::tickInterval() const
+float QRangeSlider::tickInterval() const
 {
-  //    return d_func()->tickInterval;
-  return 0;
+  return styleOptionRangeSlider_.tickInterval();
 }
 
 /*!
@@ -956,6 +997,16 @@ void
 QRangeSlider::setUnitConverter(const RangeSliderUnitConverter* unitConverter)
 {
   unitConverter_ = unitConverter;
+}
+
+void QRangeSlider::setLogarithmic(bool logarithmic)
+{
+  styleOptionRangeSlider_.setLogarithmic(logarithmic);
+}
+
+bool QRangeSlider::isLogarithmic() const
+{
+  return styleOptionRangeSlider_.isLogarithmic();
 }
 
 #endif
