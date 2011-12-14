@@ -160,7 +160,14 @@ double QDoubleRangeSlider::convertFromBaseToDouble(int value) const
   int first  = sliderMaxRange.first;
   int second = sliderMaxRange.second;
 
-  double retVal = (value - first) / double(second - first);
+  int div = second - first;
+
+  if (div == 0) {
+    assert(cutoffRange_.first == cutoffRange_.second);
+    return cutoffRange_.first;
+  }
+
+  double retVal = double(value - first) / div;
 
   double offset = cutoffRange_.first;
 
