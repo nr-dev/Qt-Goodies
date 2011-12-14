@@ -41,6 +41,8 @@ void QDoubleRangeSlider::setup()
 
   setTickInterval(10.0);
 
+  setFixedHeight(16);
+
   //Connections
   bool ok = true;
   ok &= connect(slider_,SIGNAL(rangeChanged(QPair<int,int>)),
